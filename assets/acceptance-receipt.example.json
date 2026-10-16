@@ -1,0 +1,16 @@
+{
+  "schema_version": "research-briefing-receipt/1",
+  "receipt_id": null,
+  "stage": null,
+  "checked_at": null,
+  "artifact": {"path": null, "kind": null, "version": null, "bytes": null, "sha256": null},
+  "checks": [
+    {"id": "content", "method": null, "scope": [], "status": "pending", "findings": []},
+    {"id": "native_structure", "method": null, "scope": [], "status": "pending", "findings": []},
+    {"id": "visual_reading", "method": null, "scope": [], "status": "pending", "findings": []}
+  ],
+  "render": {"tool": null, "input_sha256": null, "page_count": null, "output_path": null, "inspected_pages": []},
+  "issues": [],
+  "rehearsal": {"status": "not_performed", "actual_minutes": null},
+  "result": "pending"
+}

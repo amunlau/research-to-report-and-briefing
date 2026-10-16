@@ -1,0 +1,406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:research-to-report-and-briefing:project:2",
+  "title": "Research and briefing project configuration v2",
+  "description": "Machine authority for current scalar project settings. Authoring records explain rationale; evidence ledgers contain research facts. The stdlib CLI performs schema-equivalent checks plus relative-path containment, referenced memory existence, expected output suffix/kind matching and duration min <= max. Missing planned outputs and visual/timing reference files are allowed and reported. Legacy /1 configurations are inspected by the CLI and migrated only with update --migrate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "skill_version",
+    "topic",
+    "deliverables",
+    "memory_profile",
+    "brief",
+    "research",
+    "presentation",
+    "delivery",
+    "memory_documents",
+    "memory_history"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "research-briefing/2"
+    },
+    "skill_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$",
+      "description": "Skill version that created or migrated the configuration. Schema compatibility follows schema_version, not this provenance value."
+    },
+    "topic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deliverables": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "report",
+          "report-pdf",
+          "slides",
+          "slides-pdf",
+          "speaker-script",
+          "author-explainer"
+        ]
+      }
+    },
+    "memory_profile": {
+      "enum": [
+        "compact",
+        "full"
+      ]
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "audiences",
+        "author_baseline",
+        "focus",
+        "language",
+        "length_budget",
+        "duration_minutes"
+      ],
+      "properties": {
+        "purpose": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "audiences": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "report",
+            "slides",
+            "author_explainer"
+          ],
+          "properties": {
+            "report": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "slides": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "author_explainer": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            }
+          }
+        },
+        "author_baseline": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "focus": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1
+        },
+        "length_budget": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "duration_minutes": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "min",
+                "max"
+              ],
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cutoff_date",
+        "scope",
+        "inference_policy"
+      ],
+      "properties": {
+        "cutoff_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "scope": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "inference_policy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "visual_configuration",
+        "timing_plan",
+        "image_policy",
+        "preference_profile"
+      ],
+      "properties": {
+        "visual_configuration": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timing_plan": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "image_policy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "preference_profile": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "formats",
+        "preserve_inputs",
+        "current_stage",
+        "expected_artifacts"
+      ],
+      "properties": {
+        "formats": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "report",
+              "report-pdf",
+              "slides",
+              "slides-pdf",
+              "speaker-script",
+              "author-explainer"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "preserve_inputs": {
+          "type": "boolean"
+        },
+        "current_stage": {
+          "enum": [
+            "initialized",
+            "planning",
+            "researching",
+            "drafting",
+            "sample-review",
+            "authoring",
+            "reviewing",
+            "awaiting-review",
+            "delivered"
+          ]
+        },
+        "expected_artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        }
+      }
+    },
+    "memory_documents": {
+      "$ref": "#/$defs/memory"
+    },
+    "memory_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile",
+          "documents",
+          "retired_at_utc"
+        ],
+        "properties": {
+          "profile": {
+            "enum": [
+              "compact",
+              "full"
+            ]
+          },
+          "documents": {
+            "$ref": "#/$defs/memory"
+          },
+          "retired_at_utc": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional project or domain configuration. Core validation checks only that this is an object; technical semantics require domain review."
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/|[A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+      "description": "Normalized project-relative file path using /; runtime checks root containment, canonical spelling, file type and existence policy."
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "standards",
+        "guide",
+        "quality",
+        "content",
+        "evidence",
+        "progress"
+      ],
+      "properties": {
+        "standards": {
+          "$ref": "#/$defs/path"
+        },
+        "guide": {
+          "$ref": "#/$defs/path"
+        },
+        "quality": {
+          "$ref": "#/$defs/path"
+        },
+        "content": {
+          "$ref": "#/$defs/path"
+        },
+        "evidence": {
+          "$ref": "#/$defs/path"
+        },
+        "progress": {
+          "$ref": "#/$defs/path"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "version",
+        "required"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "report",
+            "report-pdf",
+            "slides",
+            "slides-pdf",
+            "speaker-script",
+            "author-explainer"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$comment": "A JSON Schema validator is optional; project_memory.py validate-config has no third-party dependency."
+}

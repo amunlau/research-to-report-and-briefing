@@ -1,0 +1,27 @@
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Generated build files and project records
+/build/
+/dist/
+*.egg-info/
+/.research-briefing/
+/研究辅助文档/
+
+# Operating system and temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+~$*
+*.tmp

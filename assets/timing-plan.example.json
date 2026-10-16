@@ -1,0 +1,359 @@
+{
+  "schema_version": "research-briefing-timing/1",
+  "use": "Optional worked budget matching the 75-minute guide; copy and replace with the current topic, page IDs and real actions.",
+  "time_unit": "seconds",
+  "artifact_version": null,
+  "route_id": "example-75",
+  "budget_total_seconds": 4500,
+  "units": [
+    {
+      "unit_id": "U001",
+      "title": "开场与研究命题",
+      "page_ids": [],
+      "depends_on": [],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U001-1",
+          "action": "场景",
+          "budget_seconds": 60,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U001-2",
+          "action": "判断与路线",
+          "budget_seconds": 120,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        }
+      ],
+      "budget_seconds": 180,
+      "actual_seconds": null
+    },
+    {
+      "unit_id": "U002",
+      "title": "系统全貌及基础",
+      "page_ids": [],
+      "depends_on": [
+        "U001"
+      ],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U002-1",
+          "action": "系统位置",
+          "budget_seconds": 120,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U002-2",
+          "action": "概念映射",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U002-3",
+          "action": "整体路径",
+          "budget_seconds": 120,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        }
+      ],
+      "budget_seconds": 420,
+      "actual_seconds": null
+    },
+    {
+      "unit_id": "U003",
+      "title": "关键机制A",
+      "page_ids": [],
+      "depends_on": [
+        "U002"
+      ],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U003-1",
+          "action": "建立键、缓存条目和到期时间三个前提",
+          "budget_seconds": 60,
+          "includes": [],
+          "basis": "听众熟悉键值结构，首次引入缓存条目的到期语义。",
+          "budget_range_seconds": {
+            "low": 45,
+            "central": 60,
+            "high": 90
+          }
+        },
+        {
+          "segment_id": "U003-2",
+          "action": "先读请求入口，再沿命中/未命中路径观察状态",
+          "budget_seconds": 180,
+          "includes": [
+            "本页主判断",
+            "图上路径的主要因果解释"
+          ],
+          "basis": "复杂图首次出现，需要识别状态位置、分支和回写；核心判断与路径解释同步。",
+          "budget_range_seconds": {
+            "low": 150,
+            "central": 180,
+            "high": 240
+          }
+        },
+        {
+          "segment_id": "U003-3",
+          "action": "推导四请求中的后端访问次数及剩余路径",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "另讲图中尚未展开的计数关系和资源影响，不重讲已读路径。",
+          "budget_range_seconds": {
+            "low": 150,
+            "central": 180,
+            "high": 210
+          }
+        },
+        {
+          "segment_id": "U003-4",
+          "action": "逐步走过0、20、50、70秒的请求与返回",
+          "budget_seconds": 240,
+          "includes": [
+            "原图局部对象与算例的一一对应"
+          ],
+          "basis": "保留缓存条目、后端版本和到期点；每一步产生可回查中间状态。",
+          "budget_range_seconds": {
+            "low": 210,
+            "central": 240,
+            "high": 300
+          }
+        },
+        {
+          "segment_id": "U003-5",
+          "action": "归纳有效期取舍并转入运行层",
+          "budget_seconds": 120,
+          "includes": [
+            "转入下一依赖"
+          ],
+          "basis": "回收算例结果，解释下一单元为何需要讨论更新与并发。",
+          "budget_range_seconds": {
+            "low": 105,
+            "central": 120,
+            "high": 120
+          }
+        }
+      ],
+      "budget_seconds": 780,
+      "actual_seconds": null,
+      "example_context": "以读缓存机制为例：听众有系统基础，第一次阅读请求路径/缓存状态图；后续用同一四请求例解释新鲜度和后端访问。",
+      "budget_range_seconds": {
+        "low": 660,
+        "central": 780,
+        "high": 960
+      }
+    },
+    {
+      "unit_id": "U004",
+      "title": "关键机制B",
+      "page_ids": [],
+      "depends_on": [
+        "U003"
+      ],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U004-1",
+          "action": "已知前提",
+          "budget_seconds": 60,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U004-2",
+          "action": "新图映射",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U004-3",
+          "action": "操作与状态",
+          "budget_seconds": 240,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U004-4",
+          "action": "主算例延伸",
+          "budget_seconds": 240,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U004-5",
+          "action": "归纳",
+          "budget_seconds": 120,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        }
+      ],
+      "budget_seconds": 840,
+      "actual_seconds": null
+    },
+    {
+      "unit_id": "U005",
+      "title": "软件硬件与运行",
+      "page_ids": [],
+      "depends_on": [
+        "U004"
+      ],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U005-1",
+          "action": "接口",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U005-2",
+          "action": "状态生命周期",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U005-3",
+          "action": "复用图追踪",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U005-4",
+          "action": "归纳",
+          "budget_seconds": 60,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        }
+      ],
+      "budget_seconds": 600,
+      "actual_seconds": null
+    },
+    {
+      "unit_id": "U006",
+      "title": "效果资源及技术位置",
+      "page_ids": [],
+      "depends_on": [
+        "U005"
+      ],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U006-1",
+          "action": "比较条件",
+          "budget_seconds": 60,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U006-2",
+          "action": "数量关系",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U006-3",
+          "action": "系统原因与取舍",
+          "budget_seconds": 180,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        }
+      ],
+      "budget_seconds": 420,
+      "actual_seconds": null
+    },
+    {
+      "unit_id": "U007",
+      "title": "演进及路线判断",
+      "page_ids": [],
+      "depends_on": [
+        "U006"
+      ],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U007-1",
+          "action": "约束变化",
+          "budget_seconds": 120,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U007-2",
+          "action": "路线条件",
+          "budget_seconds": 120,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        },
+        {
+          "segment_id": "U007-3",
+          "action": "结论",
+          "budget_seconds": 60,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        }
+      ],
+      "budget_seconds": 300,
+      "actual_seconds": null
+    },
+    {
+      "unit_id": "U008",
+      "title": "总结",
+      "page_ids": [],
+      "depends_on": [
+        "U007"
+      ],
+      "role": "core",
+      "segments": [
+        {
+          "segment_id": "U008-1",
+          "action": "主线与结论",
+          "budget_seconds": 120,
+          "includes": [],
+          "basis": "editable_initial_estimate"
+        }
+      ],
+      "budget_seconds": 120,
+      "actual_seconds": null
+    }
+  ],
+  "separate_activities": [
+    {
+      "activity": "独立演示切换",
+      "seconds": 60
+    },
+    {
+      "activity": "机动",
+      "seconds": 120
+    },
+    {
+      "activity": "开放问答",
+      "seconds": 660
+    }
+  ],
+  "rehearsal": {
+    "status": "not_performed",
+    "file_sha256": null,
+    "covered_unit_ids": [],
+    "actual_seconds": null
+  },
+  "review": [
+    "同步发生的主判断、读图或推导合并为同一片段，在includes记录；分段相加只计不重叠片段。",
+    "全场预算含问答与机动；不能把机动同时分配给另一已计活动。",
+    "内容预算3660秒，独立活动840秒，总计4500秒。",
+    "初始预算不代表已验证的演讲时长；按实际版本记录排练并校准。",
+    "U003具体演示难度区间与重叠合并；本表总预算取各单元中值。仅改变U003时全场为73—78分钟，其余单元待项目逐项校准。"
+  ]
+}

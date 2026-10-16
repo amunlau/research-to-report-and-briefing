@@ -1,0 +1,97 @@
+{
+  "profile_version": "1.0.0",
+  "profile_id": "technical-briefing-16x9-example",
+  "purpose": "可复制到项目内的技术汇报视觉示例；数值由项目选择、覆盖并经实际页面验证。",
+  "selection": {
+    "enabled_by_default": false,
+    "requires_reference_file": false,
+    "project_override_allowed": true,
+    "note": "选择该示例后按听众、播放环境和内容调整；密度、原图优先等偏好不自动适用于其他项目。"
+  },
+  "canvas": {
+    "aspect_ratio": "16:9",
+    "width_in": 13.333333,
+    "height_in": 7.5,
+    "coordinate_unit": "in",
+    "background": "FFFFFF"
+  },
+  "typography": {
+    "font_size_unit": "pt",
+    "cjk_font_candidates": ["Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC"],
+    "latin_font_candidates": ["Aptos", "Arial", "Liberation Sans"],
+    "equation_font_candidates": ["Cambria Math", "STIX Two Math"],
+    "font_resolution": "制作前选择已安装字体；替代后重新渲染并检查中文、数学符号、行宽和分页。",
+    "title": {"size": 26, "bold": true, "color": "17324D", "max_lines": 2, "line_spacing_multiple": 1.08},
+    "section_label": {"size": 13, "bold": true, "color": "36566F"},
+    "body": {"size": 17, "color": "1F2933", "line_spacing_multiple": 1.12},
+    "emphasis": {"size": 18, "bold": true, "color": "146C94"},
+    "table_header": {"size": 15, "bold": true},
+    "table_body": {"size": 14},
+    "figure_annotation": {"size": 15},
+    "source_short": {"size": 11, "color": "52616B"},
+    "footer": {"size": 10, "color": "52616B"},
+    "legibility_rule": "字号是编辑起点。现场必须读清的标签、数字和引用标识按播放环境放大；较细文献条目集中到来源页。"
+  },
+  "layout": {
+    "page_margin_left": 0.42,
+    "page_margin_right": 0.42,
+    "title_region": {"x": 0.42, "y": 0.27, "w": 12.49, "h": 0.95},
+    "content_region": {"x": 0.42, "y": 1.35, "w": 12.49, "h": 5.39},
+    "source_region": {"x": 0.42, "y": 6.90, "w": 11.59, "h": 0.32},
+    "page_number_region": {"x": 12.10, "y": 6.90, "w": 0.81, "h": 0.32},
+    "column_gutter": 0.24,
+    "block_gap": 0.18,
+    "paragraph_gap_pt": 5,
+    "textbox_padding_in": 0.05,
+    "grid_columns": 12,
+    "layout_variants": {
+      "mechanism": "主图约占内容宽度62%—72%，相邻区域放步骤或主算例，按图宽调整。",
+      "system": "按真实输入、处理、状态、输出和跨层接口布置，突出当前关键路径。",
+      "comparison": "对比图或表为主，统一条件和单位，旁置简短原因。",
+      "derivation": "输入与对象映射、关键中间量、结果与系统含义形成连续顺序。"
+    }
+  },
+  "palette": {
+    "primary": "17324D",
+    "secondary": "146C94",
+    "accent": "B36B00",
+    "body_text": "1F2933",
+    "muted_text": "52616B",
+    "panel_fill": "F3F6F8",
+    "panel_border": "D5DEE5",
+    "white": "FFFFFF",
+    "semantic_use": {
+      "primary": "章节、核心对象和标题",
+      "secondary": "当前讲述路径或稳定对象类型",
+      "accent": "新增操作、关键差值或关注量；避免整页同时强调",
+      "meaning": "同一图组内颜色语义保持；用文字、线型或标号同时表达区别。"
+    }
+  },
+  "figures": {
+    "original_label_preserved": true,
+    "reading_layers": ["系统位置", "关键路径", "必要局部"],
+    "local_zoom": "保留整体位置提示和对应标号，裁剪不删去理解路径所需对象。",
+    "bitmap_rule": "按最终尺寸检查关键标签；放大无效时寻找矢量或清晰原件，必要时等义重绘。",
+    "caption_rule": "说明当前对象与读取入口；解释按项目分配到页面、讲稿和详解。"
+  },
+  "tables": {
+    "header_fill": "17324D",
+    "header_text": "FFFFFF",
+    "alternate_row_fill": "F3F6F8",
+    "border_color": "D5DEE5",
+    "border_width_pt": 0.5,
+    "numeric_alignment": "right",
+    "text_alignment": "left",
+    "row_rule": "保留有意义字段和单位，必要时按逻辑组拆表，避免统一缩小全表。"
+  },
+  "sources": {
+    "on_slide": "短来源名、稳定来源ID和必要定位；完整条目存于来源页或配套文档。",
+    "traceability": "图、数据和论断关联各自依据；处理图像保留原件与处理说明。"
+  },
+  "screen_validation": {
+    "render_actual_final_file": true,
+    "views": ["整页按预期显示比例", "关键标签与图轴局部", "全稿相邻页连续阅读"],
+    "checks": ["主判断与阅读入口明确", "中文和公式正常", "标签、单位及数字可读", "无裁切遮挡", "颜色与标号语义一致", "来源区域保留且不挤压正文"],
+    "record": "记录渲染文件版本、查看环境及问题修订结果。"
+  }
+}

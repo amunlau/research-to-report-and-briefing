@@ -1,0 +1,4 @@
+interface:
+  display_name: "深度调研、报告与汇报"
+  short_description: "独立调研、报告与汇报制作，配套演讲稿、作者详解和项目记忆"
+  default_prompt: "使用 $research-to-report-and-briefing，根据本项目目标开展调研，并按需要制作报告、汇报材料、作者详解和辅助文档。"
