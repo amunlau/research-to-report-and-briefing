@@ -11,6 +11,8 @@
 
 小任务可用等价表格或内容卡，保留来源、判断、使用位置与状态即可。首次使用结构化文件时从实际资料建记录，不把示例内容当研究结果。只做报告时不建空PPT计划；仅制作PPT时不要求完整报告。
 
+研究问题沿既有主线/内容卡维护；需要结构化覆盖映射时，可在账本顶层`extensions.question_coverage`记录问题ID、当前回答、回答状态、关联F/C/P ID及缺口影响。状态采用“已回答、有限回答、未解、范围外”，含义见[研究收束](research-and-evidence.md#阶段充分性与研究收束)。这是可选项目扩展，不是新增必填schema字段；不要将Q ID直接填入只接受事实或章节引用的位置。助手不验证该扩展或问题是否真正得到回答，交付前仍需逐项阅读。
+
 ## ID与状态
 
 沿用已有ID。新项目可用S来源、F事实/判断、A素材、C章节、P页面、B页面块。B在页内唯一，以`P007/B03`定位。章节编号、实际页码、显示引用号另外映射；调整顺序不改稳定ID。原技能曾使用其他前缀，不因升级强制重编号。
@@ -48,7 +50,11 @@ calculation：表达式、输入、单位、舍入和结果检查记录（需要
 
 素材记录`id/kind/local_path/caption/source_refs/fact_ids/truth_role/review_status`。`local_path`是实际用于制作的项目相对文件路径；尚未取得原图时保留`null`及缺口，不假定远程链接已成为本地资产。
 
+可选`sha256`绑定该A ID的`local_path`文件字节。启用`--check-files`时，助手会核对已记录的指纹；最终直接使用的素材错配报错，草稿、未使用项和仅作为派生图上游的原件错配提示。文件变化后先核对差异及受影响的审阅记录，再更新记录，不能只替换指纹就视为重新审阅。裁切或重绘形成新文件时沿新A ID保存其指纹。上游原件变化是否影响已审阅派生图的含义仍需判断；没有指纹的合法素材继续按原有来源、审阅与成品检查规则处理。
+
 `kind`可为`original-figure/photo/table-crop/redrawn-diagram/data-chart/generated-concept/other`；`truth_role`为`evidence/explanation/decorative`。生成概念图不能标为技术事实的直接证据。复合图裁切记录`transforms`、原图号、分图与边界；同义重绘保留数据或拓扑依据及差异。
+
+最终使用的`evidence`素材应关联支持性来源或事实，派生素材可沿`derived_from`保留这条支持链；图片文件存在、图注完整或标为`reviewed`都不能替代依据。解释性与装饰性素材按其真实用途记录，不为通过检查将承担证据作用的图改成装饰。支持链的语义是否足够，仍需实际阅读原材料。
 
 `review_status`为`pending/reviewed/rejected`，这里的reviewed指实际检查其技术含义、裁切和可用性；最终PPT中的可读性另行检查。源图通过不等于缩入页面后可读。`reading_notes`记录系统位置、标签和关键路径，供页面与讲稿共用。裁切或重绘得到新文件时使用新A ID，`derived_from`列出原A ID，保留原件；多图合成可以有多个父素材。
 
@@ -58,7 +64,7 @@ calculation：表达式、输入、单位、舍入和结果检查记录（需要
 
 `deck.pages`的数组顺序就是计划页序。`deck.mode`显式记录用途，未指定时按hybrid规划；可选`deck.notes_enabled`省略时按true，用户明确关闭时写false。JSON Schema中的default仅表达约定，不会自动生成正文或备注。每页包含`id/role/archetype/title/takeaway/fact_ids/asset_ids/blocks/reading_path/speaker_notes/author_explainer_refs/density/evidence_exceptions`。
 
-- `role`区分`title/section/core/detail/appendix/summary`；一页可有多个证据块，围绕明确技术问题组织。
+- `role`区分`title/section/core/detail/appendix/summary`；内容页围绕本次解释或论证任务组织，可以包含多个证据块。封面、章节导航与过渡页按定位和衔接安排，不强制套入技术问题；沿用现有角色枚举。
 - `title`写可用的页面概要、具体问题或有据观点，并联系全场主旨。`takeaway`记录读者需要形成的核心认识或问题边界，供组织内容使用；不要求它是强结论或在页上重复打印。不放“这里填写结论”等制作指令。
 - `speaker_notes`默认保存可直接照读的完整口语稿，服从本页`reading_path`和实际图表布局。普通内容页约30—90秒为初始参考，允许按复杂度与全场时长调整，不设置统一字数。只有用户关闭备注，或当前尚在规划未成稿时，才按相应状态留空；未成稿不能当作备注已交付。
 - 每块有`id/kind/content/fact_ids/asset_ids/target_editability`。`content`是最终可用文字、表格数据、图注、方程或结构描述，可以是字符串或结构化对象；不把研究任务指令作为读者文字。
@@ -69,7 +75,9 @@ calculation：表达式、输入、单位、舍入和结果检查记录（需要
 
 实际版面使用的点、英寸或SVG坐标由引擎换算，不把本契约中的pt直接当成另一引擎的像素。文本行数、字体替换和图内标签以实际渲染为准。
 
-密集中文或模板页的测量可按[排版测量](layout-engineering.md)在`deck.extensions.layout_records`记录页/块ID、实际字体、可用区域和调整依据；它不改动核心字段，也不使助手自动具备字体测量能力。渲染与内容保真结果保存于验收回执，避免把期望值当成实际结果写回计划。
+同段局部加粗或着色时，`content`可选用`{"runs":[{"text":"本数据","bold":true},{"text":"仅用于测试。"}]}`。内容助手只连接同一`runs`数组内相邻的字符串`text`，忽略这些文字项的样式及备注字段；容器及非文字项中的`style/styles/format/formatting`也不计入可见文字。非文字项或显式断行对象（`break:true`或`type`为`break/line-break/br`）会中断连接，`text`中的换行原样保留。不同段落、单元格、图节点及文本块保持独立，兄弟`caption`、`paragraphs`等正文仍分别读取。其他结构沿用独立字符串片段检查；这不是任意引擎富文本格式的通用解析器，不新增必填字段，也不证明最终页面实际可见。
+
+图形块的`content`可保存节点、真实关系、分组及完整说明，沿用块级事实和素材关联；小任务继续用等价内容卡。构图选择、文字容量、图文对应、有效图像范围和布局调整可按[排版测量](layout-engineering.md)记于`deck.extensions.layout_records`，关联页/块ID及素材ID，需要时补实际字体与可用区域。不要在受约束的page对象上另加未经schema支持的字段；这些可选记录由制作适配使用，不使助手自动具备排版、字体测量或审美判断能力。渲染与内容保真结果保存于验收回执，避免把期望值当成实际结果写回计划。
 
 ## 未定结论的可见处理
 
@@ -80,6 +88,8 @@ calculation：表达式、输入、单位、舍入和结果检查记录（需要
 ## 报告、讲稿和解析
 
 `content.sections`保存`id/deliverable/heading/body/fact_ids/asset_ids/depends_on/evidence_exceptions`。`deliverable`区分`report/speaker-script/author-explainer`；`depends_on`可用于知识依赖。正文大时，可在项目既有文稿维护正文，并让账本仅保存有来源定位的关键内容卡；使用自动助手时提供其能够读取的内容副本并明确哪个位置是权威。
+
+采用外部权威文稿时，章节的实际文件、标题/锚点与内容卡映射记录在现有制作记录或账本顶层`extensions`。每次审查前从当前文稿刷新受影响内容副本，并记录副本来源文件的指纹和覆盖范围；不得用旧副本的结构通过结果证明新版报告正确。报告中的引文号、图表号与最终页码分别映射回稳定S/A/C ID。账本只覆盖关键内容卡时，明确未覆盖正文仍需全文语义和引用检查。
 
 所有成果共享事实，表达不要求逐字一致。页面保留问题、关系、证据与条件，以及讲者可沿用的解释线索；讲稿解释实际图表和转场；解析展开前置知识、中间过程与复算。禁止为了字符串一致性把报告段落原样塞进PPT。默认备注属于PPT本身，不自动增加独立speaker-script交付；用户另需独立讲稿时，从同一页ID与口语稿生成。
 
@@ -105,5 +115,7 @@ python <skill-dir>/scripts/audit_content.py --root <project-dir> --ledger .resea
 ```
 
 助手查必需结构、ID与引用、来源定位、派生依赖、限定说明、素材文件和页面映射；输出发现，不改原文件。`final`提高所用内容的完整性要求。备注启用时，空白`speaker_notes`在draft阶段提示，在final阶段报错；显式关闭时允许为空。非空仅通过这一结构条件，不能证明讲稿完整、可照读或已经写入PPTX。它不判断原文是否支持论断，不执行计算表达式，不保证语义覆盖，也不验证引擎输出与计划相同。JSON Schema供可用验证器使用；内置助手执行所说明的结构子集与跨文件检查，不能冒称完整Schema验证或事实审计。
+
+最终已用的证据素材缺少支持性来源或事实链时，助手报错；派生链可提供继承依据。草稿或未使用项仅提示，解释性/装饰性素材不要求同一门槛。这仍是引用结构检查，不证明原图或事实真正支持成品中的论断。
 
 核对最终文件时，可用`inspect_pptx.py --pptx <final.pptx> --include-text --out <new-inventory.json>`取得各页`native_text.text/paragraphs`与`notes.text/paragraphs`。原生段落按XML顺序提取，保留段落和显式换行；不推断视觉读序，也不还原项目符号、公式结构或图片/图表内文字。备用显示分支和隐藏对象的文字可能一并提取，命中字符串不证明它在页面上可见。`characters`沿用文本节点字符合计，不计补入的分隔换行，可能不同于完整文本长度。输出路径必须是新文件。将这份材料与计划逐页比对，缺失部分仍回到实际页面或对应对象检查。

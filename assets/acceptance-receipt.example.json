@@ -3,9 +3,11 @@
   "receipt_id": null,
   "stage": null,
   "checked_at": null,
+  "reviewer": null,
   "artifact": {"path": null, "kind": null, "version": null, "bytes": null, "sha256": null},
   "checks": [
     {"id": "content", "method": null, "scope": [], "status": "pending", "findings": []},
+    {"id": "language_editing", "method": null, "scope": [], "status": "pending", "findings": []},
     {"id": "content_preservation", "method": null, "scope": [], "status": "pending", "findings": [], "baseline_path": null, "baseline_sha256": null},
     {"id": "native_structure", "method": null, "scope": [], "status": "pending", "findings": []},
     {"id": "visual_reading", "method": null, "scope": [], "status": "pending", "findings": []}

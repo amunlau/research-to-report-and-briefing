@@ -1,13 +1,14 @@
 {
   "profile_id": "technical-research-zh",
-  "profile_version": "1.0",
+  "profile_version": "3.0.0",
   "use": "Chinese research and briefing defaults; explicit user, brand and template requirements override them. Example sizes and page layouts remain optional starting points.",
   "language": "zh-CN",
   "headings": "content_summary_question_or_supported_viewpoint_serving_overall_message",
   "voice": "human_researcher_and_presenter",
+  "writing": {"report_body": "normal_weight_with_semantic_headings", "emphasis": "selective_for_reader_tasks_not_repeated_decoration", "quotes": "avoid_decorative_corner_quotes_preserve_genuine_quotes_code_names_and_required_formats", "editing": "preserve_evidence_conditions_and_technical_depth; see references/writing-and-editing.md"},
   "images": {"principles": "prefer_relevant_authoritative_originals_within_allowed_material_scope", "redraw": "preserve_meaning_when_original_quality_is_insufficient"},
   "explanation": {"report_audience": "infer_from_task_and_supplied_context", "author_baseline": "infer_from_task_and_supplied_context", "system_view": true},
-  "presentation": {"density": "readable_complete_points_and_explanatory_visuals", "cjk_font": "Microsoft YaHei", "visual_style": "restrained_blue_light_background_dark_text", "duration_minutes": null, "question_minutes": null, "visual_profile": null},
+  "presentation": {"density": "readable_complete_points_and_explanatory_visuals", "cjk_font": "Microsoft YaHei", "visual_style": "blue_base_light_background_dark_text_with_coordinated_accents_allowed", "text_blocks": "strongly_prefer_semantic_grouping_and_selective_visual_treatment_preserve_full_explanation; see references/visual-expression.md", "color_roles": "stable_category_status_and_focus_meanings_with_labels; no_fixed_color_count_or_required_palette", "duration_minutes": null, "question_minutes": null, "visual_profile": null},
   "delivery": {"preserve_content_versions": true, "update_auxiliary_records_in_place": true},
   "conditional_preferences": {"cost_or_adaptation_emphasis": "choose_for_current_research_purpose", "author_explainer": "produce_only_when_requested"}
 }

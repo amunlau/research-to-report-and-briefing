@@ -13,7 +13,7 @@ LIMITS = [
     "不核实原文是否支持结论，不执行计算表达式，不检查事实真实性。",
     "可见限定语仅作字符串覆盖检查，不证明语义充分或实际成品可见。",
     "备注仅检查启用时是否非空，不判断口语稿完整性、自然程度或讲述时长。",
-    "本地文件存在性仅在--check-files启用时检查。",
+    "本地文件存在性及已记录素材sha256仅在--check-files启用时检查；不为缺失指纹补值。",
     "几何检查仅比较计划中的pt矩形，不检测真实文字、像素溢出或图内标签。",
     "引擎映射仅查结构与引用，不证明最终文件的视觉或原生编辑性通过。",
 ]
@@ -132,16 +132,46 @@ def schema_errors(value, schema, document, location):
     return errors
 
 
-def visible_text(value):
+def visible_runs(runs):
+    """Join adjacent text runs within one paragraph, never unrelated objects."""
+    result, pending = [], []
+
+    def flush():
+        if pending:
+            result.append("".join(pending))
+            pending.clear()
+
+    for run in runs:
+        explicit_break = isinstance(run, dict) and (
+            run.get("break") is True or run.get("type") in ("break", "line-break", "br"))
+        if explicit_break:
+            flush()
+        elif isinstance(run, dict) and isinstance(run.get("text"), str):
+            # Preserve newlines literally; ignore the run's formatting fields.
+            pending.append(run["text"])
+        else:
+            flush()
+            result.extend(visible_text(run, rich_context=True))
+    flush()
+    return result
+
+
+def visible_text(value, rich_context=False):
     if isinstance(value, str):
         return [value]
     if isinstance(value, list):
-        return [text for item in value for text in visible_text(item)]
+        return [text for item in value for text in visible_text(item, rich_context)]
     if isinstance(value, dict):
         hidden = {"fact_id", "fact_ids", "asset_id", "asset_ids", "source_id",
                   "source_refs", "source_locators", "speaker_notes", "notes", "metadata"}
-        return [text for key, item in value.items() if key not in hidden
-                for text in visible_text(item)]
+        if rich_context or isinstance(value.get("runs"), list):
+            hidden.update({"style", "styles", "format", "formatting"})
+        result = []
+        for key, item in value.items():
+            if key not in hidden:
+                result.extend(visible_runs(item) if key == "runs" and isinstance(item, list)
+                              else visible_text(item, rich_context))
+        return result
     return []
 
 
@@ -182,6 +212,25 @@ class Audit:
             self.add("missing_file", location, "本地文件不存在: " + value,
                      self.final and used)
         return path
+
+    def asset_fingerprint(self, path, expected, location, used):
+        """Check an optional recorded identity without making hashes mandatory."""
+        if not self.check_files or path is None or expected is None:
+            return
+        try:
+            if not path.is_file():
+                return  # Missing-file reporting belongs to path().
+            digest = hashlib.sha256()
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            if digest.hexdigest() != expected.lower():
+                self.add("asset_hash_mismatch", location,
+                         "素材文件与记录的sha256不一致；需核对文件及既有审阅记录",
+                         self.final and used)
+        except OSError as exc:
+            self.add("asset_hash_unreadable", location,
+                     "无法读取素材以核对sha256: " + str(exc), self.final and used)
 
     def cycles(self, graph, location):
         state = {}
@@ -290,9 +339,21 @@ class Audit:
             self.source_refs(asset["source_refs"], loc + ".source_refs", aid in self.evidence_assets)
             if asset["kind"] == "generated-concept" and asset["truth_role"] == "evidence":
                 self.add("generated_as_evidence", loc, "生成概念图不能标为技术事实证据", True)
+            if asset["truth_role"] == "evidence":
+                provenance = [self.assets[parent] for parent in
+                              self.closure([aid], self.assets, "derived_from")
+                              if parent in self.assets]
+                has_basis = any(item["fact_ids"] or any(
+                    ref["relation"] == "supports" for ref in item["source_refs"])
+                    for item in provenance)
+                if not has_basis:
+                    self.add("untraceable_evidence_asset", loc,
+                             "证据素材及其派生来源均无支持性来源或事实依据",
+                             self.final and used)
             if asset["review_status"] != "reviewed":
                 self.add("asset_not_ready", loc, "素材状态: " + asset["review_status"], self.final and used)
-            self.path(asset["local_path"], loc + ".local_path", used)
+            path = self.path(asset["local_path"], loc + ".local_path", used)
+            self.asset_fingerprint(path, asset.get("sha256"), loc + ".sha256", used)
 
     def pages(self, deck):
         pages = self.index(deck["pages"], "deck.pages")

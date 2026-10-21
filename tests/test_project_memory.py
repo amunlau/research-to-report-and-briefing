@@ -63,6 +63,7 @@ class MemoryBehavior(unittest.TestCase):
         self.assertEqual(self.init()[0], 0)
         config = self.read_config()
         self.assertEqual(config['schema_version'], helper.SCHEMA)
+        self.assertEqual(config['skill_version'], helper.VERSION)
         self.assertEqual(set(config['brief']['audiences']), {'report', 'slides', 'author_explainer'})
         self.assertEqual(len(list((self.root / '研究辅助文档').glob('*.md'))), 3)
         self.assertEqual(self.run_cli('validate-config')[0], 0)
@@ -387,17 +388,22 @@ class MemoryBehavior(unittest.TestCase):
         (self.root / config['memory_documents']['quality']).unlink()
         self.assertEqual(self.run_cli('validate-config')[0], 2)
 
-    def test_frozen_acceptance_identity_survives_later_scope_change_and_project_copy(self):
+    def test_expected_snapshot_survives_project_copy_but_detects_scope_change(self):
         self.init()
         (self.root / '报告.md').write_text('内容', encoding='utf-8')
         self.expect(self.artifact())
         self.run_cli('snapshot', '--label', 'v1', '--expected')
-        self.run_cli('update', '--add-deliverable', 'slides')
         other = self.root.parent / '复制项目'
         shutil.copytree(self.root, other)
         rc, result = self.run_cli('verify', '--manifest', '.research-briefing/snapshots/v1.json', root=other)
         self.assertEqual(rc, 0)
+        self.assertEqual(result['config_status'], 'match')
+        self.assertEqual(self.run_cli('update', '--add-deliverable', 'slides', root=other)[0], 0)
+        rc, result = self.run_cli('verify', '--manifest', '.research-briefing/snapshots/v1.json', root=other)
+        self.assertEqual(rc, 1)
+        self.assertEqual(result['status'], 'different')
         self.assertEqual(result['config_status'], 'changed')
+        self.assertEqual(result['findings'], [])
 
     def test_legacy_manifest_and_normalized_duplicate_inputs_remain_supported(self):
         path = self.root / '报告.md'

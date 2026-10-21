@@ -1,6 +1,6 @@
 # 在 Claude Code 中安装与使用
 
-适用于本仓库 **2.0.0**。功能、依赖和共同安装约定以 [README](../README.md) 为主；字体、路径、引擎和渲染差异见[环境适配](../references/portability.md)。
+适用于本仓库 **3.0.0**。功能、依赖和共同安装约定以 [README](../README.md) 为主；字体、路径、引擎和渲染差异见[环境适配](../references/portability.md)。
 
 ## 1. 准备源码与宿主
 

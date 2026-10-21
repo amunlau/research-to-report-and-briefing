@@ -34,6 +34,7 @@ LIMITATIONS = [
     "Notes are rough text extraction excluding date, slide-number, header, footer and slide-image placeholders.",
     "Optional full text follows XML paragraph order, not visual reading order; image/chart text, bullet markers and formula structure are not reconstructed.",
     "Character counts retain the text-node total and exclude inserted paragraph/line separators; they need not equal the full-text string length.",
+    "Input fingerprints are compared before and after inspection; this detects changes but does not lock the file against concurrent writers.",
     "No ZIP extraction, macros, embedded objects, external links, or Office execution occurs.",
 ]
 
@@ -312,12 +313,17 @@ def slide_inventory(pkg, part, order, slide_id, canvas, include_text=False):
     return output
 
 
-def inspect(path, include_text=False):
-    before = path.stat()
+def file_sha256(path):
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
+    return digest.hexdigest()
+
+
+def inspect(path, include_text=False):
+    before = path.stat()
+    digest = file_sha256(path)
     with zipfile.ZipFile(path) as archive:
         if len(archive.infolist()) > MAX_MEMBERS:
             raise ValueError("ZIP member count exceeds the inspection limit.")
@@ -360,13 +366,14 @@ def inspect(path, include_text=False):
                     slides.append({"order": order, "slide_id": sid, "part": None})
                 else:
                     slides.append(slide_inventory(pkg, ref["part"], order, sid, canvas, include_text))
+        final_digest = file_sha256(path)
         after = path.stat()
         if not slides and not pkg.errors:
             pkg.warn("empty_presentation", part, "The presentation has no ordered slides.")
-        if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+        if digest != final_digest or (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
             pkg.error("input_changed", str(path), "Input changed during inspection; identity is not stable.")
         report = {"status": "structural_errors" if pkg.errors else "inventory_generated",
-                  "input": {"path": str(path.resolve()), "bytes": before.st_size, "sha256": digest.hexdigest()},
+                  "input": {"path": str(path.resolve()), "bytes": before.st_size, "sha256": digest},
                   "canvas": {"emu": canvas, "inches": [round(v / EMU_PER_INCH, 4) for v in canvas] if canvas else None},
                   "slide_count": len(slides), "slides": slides, "errors": pkg.errors,
                   "warnings": pkg.warnings, "limitations": LIMITATIONS}

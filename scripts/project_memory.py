@@ -18,7 +18,7 @@ import uuid
 
 SCHEMA = 'research-briefing/2'
 LEGACY = 'research-briefing/1'
-VERSION = '2.0.0'
+VERSION = '3.0.0'
 SEMVER = (r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
           r'(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
           r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?'
@@ -99,7 +99,8 @@ def fingerprint(path):
         for chunk in iter(lambda: stream.read(1024 * 1024), b''):
             digest.update(chunk)
     after = path.stat()
-    require((before.st_size, before.st_mtime_ns) == (after.st_size, after.st_mtime_ns),
+    require((before.st_size, before.st_mtime_ns, before.st_ctime_ns, before.st_dev, before.st_ino)
+            == (after.st_size, after.st_mtime_ns, after.st_ctime_ns, after.st_dev, after.st_ino),
             'File changed while being read: ' + str(path))
     return {'bytes': after.st_size, 'sha256': digest.hexdigest()}
 
@@ -337,8 +338,7 @@ def initialize(args):
 def update(args):
     root = Path(args.root).resolve()
     cfg, _ = inside(root, META + '/project.json')
-    original_identity = fingerprint(cfg)
-    original = load_json(cfg)
+    original, original_identity = load_json(cfg, with_identity=True)
     validate_config(root, original)
     data, documents = deepcopy(original), {}
     if data['schema_version'] == LEGACY:
@@ -365,6 +365,16 @@ def update(args):
         data['delivery']['expected_artifacts'] = load_json(path)
     if args.stage:
         data['delivery']['current_stage'] = args.stage
+    if data == original and not documents:
+        # A retry or an already-selected value must not reformat the JSON and
+        # invalidate a byte-bound snapshot without a configuration change.
+        # Python treats True == 1 and False == 0; equality must not let an
+        # invalid candidate bypass the configuration type checks.
+        validate_config(root, data)
+        require(fingerprint(cfg) == original_identity, 'Configuration changed during update; retry after reading it.')
+        emit({'status': 'unchanged', 'schema_version': SCHEMA, 'tool_version': VERSION,
+              'deliverables': data['deliverables'], 'memory_profile': data['memory_profile'], 'created': []})
+        return 0
     created = create_batch(documents)
     temporary = cfg.with_name('.project-pending-' + uuid.uuid4().hex + '.json')
     try:
@@ -445,6 +455,9 @@ def verify(args):
     manifest, _ = inside(root, args.manifest)
     data = load_json(manifest)
     require(isinstance(data, dict) and data.get('schema_version') in (SCHEMA, LEGACY), 'Unsupported snapshot schema.')
+    if data['schema_version'] == SCHEMA:
+        require(('expected_artifacts' in data) == ('config_identity' in data),
+                'Expected artifacts and config identity must appear together in a bound snapshot.')
     entries = data.get('files')
     require(isinstance(entries, list) and bool(entries), 'Snapshot must contain file entries.')
     findings, seen = [], set()
