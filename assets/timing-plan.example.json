@@ -1,347 +1,221 @@
 {
   "schema_version": "research-briefing-timing/1",
-  "use": "Optional worked budget matching the 75-minute guide; copy and replace with the current topic, page IDs and real actions.",
+  "use": "可选的15分钟预算示例，12页仅展示不同节奏。复制后替换为当前课题、真实页ID与动作，由project.presentation.timing_plan引用；不把估时标签写进口语稿。",
   "time_unit": "seconds",
   "artifact_version": null,
-  "route_id": "example-75",
-  "budget_total_seconds": 4500,
+  "route_id": "example-15",
+  "budget_total_seconds": 900,
   "units": [
     {
       "unit_id": "U001",
       "title": "开场与研究命题",
-      "page_ids": [],
+      "page_ids": ["P001", "P002"],
       "depends_on": [],
       "role": "core",
       "segments": [
         {
           "segment_id": "U001-1",
-          "action": "场景",
-          "budget_seconds": 60,
+          "page_id": "P001",
+          "action": "引入场景和本次主题",
+          "budget_seconds": 20,
           "includes": [],
-          "basis": "editable_initial_estimate"
+          "basis": "封面用简短完整句建立入口，不承担机制解释。"
         },
         {
           "segment_id": "U001-2",
-          "action": "判断与路线",
-          "budget_seconds": 120,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P002",
+          "action": "说明待回答问题、研究范围及内容路线",
+          "budget_seconds": 55,
+          "includes": ["本次目的"],
+          "basis": "听众已有系统基础，页面保留问题和范围，备注按页面顺序说明。"
         }
       ],
-      "budget_seconds": 180,
+      "budget_seconds": 75,
       "actual_seconds": null
     },
     {
       "unit_id": "U002",
       "title": "系统全貌及基础",
-      "page_ids": [],
-      "depends_on": [
-        "U001"
-      ],
+      "page_ids": ["P003", "P004"],
+      "depends_on": ["U001"],
       "role": "core",
       "segments": [
         {
           "segment_id": "U002-1",
-          "action": "系统位置",
-          "budget_seconds": 120,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P003",
+          "action": "定位缓存、请求方与后端，追踪整体路径",
+          "budget_seconds": 65,
+          "includes": ["本页内容概括", "图例入口"],
+          "basis": "普通系统图中沿单一路径定位对象，定位与因果说明同步。"
         },
         {
           "segment_id": "U002-2",
-          "action": "概念映射",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U002-3",
-          "action": "整体路径",
-          "budget_seconds": 120,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P004",
+          "action": "解释键、条目、版本与到期点的关系",
+          "budget_seconds": 70,
+          "includes": ["后续算例的必要条件"],
+          "basis": "用同一条目关联术语，页面保留定义、单位和条件，避免后续回跳。"
         }
       ],
-      "budget_seconds": 420,
+      "budget_seconds": 135,
       "actual_seconds": null
     },
     {
       "unit_id": "U003",
-      "title": "关键机制A",
-      "page_ids": [],
-      "depends_on": [
-        "U002"
-      ],
+      "title": "请求路径与主算例",
+      "page_ids": ["P005", "P006"],
+      "depends_on": ["U002"],
       "role": "core",
       "segments": [
         {
           "segment_id": "U003-1",
-          "action": "建立键、缓存条目和到期时间三个前提",
-          "budget_seconds": 60,
-          "includes": [],
-          "basis": "听众熟悉键值结构，首次引入缓存条目的到期语义。",
-          "budget_range_seconds": {
-            "low": 45,
-            "central": 60,
-            "high": 90
-          }
+          "page_id": "P005",
+          "action": "定位请求入口及有效期条件",
+          "budget_seconds": 15,
+          "includes": ["本页内容与主线的联系"],
+          "basis": "复用上页已经解释的条目语义，只定位本页的路径起点。",
+          "budget_range_seconds": {"low": 10, "central": 15, "high": 20}
         },
         {
           "segment_id": "U003-2",
-          "action": "先读请求入口，再沿命中/未命中路径观察状态",
-          "budget_seconds": 180,
-          "includes": [
-            "本页主判断",
-            "图上路径的主要因果解释"
-          ],
-          "basis": "复杂图首次出现，需要识别状态位置、分支和回写；核心判断与路径解释同步。",
-          "budget_range_seconds": {
-            "low": 150,
-            "central": 180,
-            "high": 240
-          }
+          "page_id": "P005",
+          "action": "沿命中与未命中分支解释查询、返回及回写",
+          "budget_seconds": 70,
+          "includes": ["路径的主要因果说明", "转入算例的承接"],
+          "basis": "分支图首次出现；读图与解释同步，不另加同一段因果时间。",
+          "budget_range_seconds": {"low": 60, "central": 70, "high": 75}
         },
         {
           "segment_id": "U003-3",
-          "action": "推导四请求中的后端访问次数及剩余路径",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "另讲图中尚未展开的计数关系和资源影响，不重讲已读路径。",
-          "budget_range_seconds": {
-            "low": 150,
-            "central": 180,
-            "high": 210
-          }
+          "page_id": "P006",
+          "action": "逐步跟随0、20、50、70秒的四次请求与返回",
+          "budget_seconds": 90,
+          "includes": ["原图局部对象与算例的一一对应", "每次请求后的状态变化"],
+          "basis": "沿已知路径追踪条目、后端版本和到期点；实际条件与状态须完整留在页上。",
+          "budget_range_seconds": {"low": 75, "central": 90, "high": 120}
         },
         {
           "segment_id": "U003-4",
-          "action": "逐步走过0、20、50、70秒的请求与返回",
-          "budget_seconds": 240,
-          "includes": [
-            "原图局部对象与算例的一一对应"
-          ],
-          "basis": "保留缓存条目、后端版本和到期点；每一步产生可回查中间状态。",
-          "budget_range_seconds": {
-            "low": 210,
-            "central": 240,
-            "high": 300
-          }
-        },
-        {
-          "segment_id": "U003-5",
-          "action": "归纳有效期取舍并转入运行层",
-          "budget_seconds": 120,
-          "includes": [
-            "转入下一依赖"
-          ],
-          "basis": "回收算例结果，解释下一单元为何需要讨论更新与并发。",
-          "budget_range_seconds": {
-            "low": 105,
-            "central": 120,
-            "high": 120
-          }
+          "page_id": "P006",
+          "action": "汇总后端访问次数，说明有效期条件并转入更新机制",
+          "budget_seconds": 30,
+          "includes": ["算例结果的解释", "下一单元的必要依赖"],
+          "basis": "只总结四次请求得到的计数与条件，不重新走一遍路径。",
+          "budget_range_seconds": {"low": 30, "central": 30, "high": 35}
         }
       ],
-      "budget_seconds": 780,
+      "budget_seconds": 205,
       "actual_seconds": null,
-      "example_context": "以读缓存机制为例：听众有系统基础，第一次阅读请求路径/缓存状态图；后续用同一四请求例解释新鲜度和后端访问。",
-      "budget_range_seconds": {
-        "low": 660,
-        "central": 780,
-        "high": 960
-      }
+      "example_context": "听众已有系统基础，已在前页认识缓存条目与到期语义。P005预算85秒，P006为需额外时间的复杂算例页，预算120秒；不是逐页时长要求。",
+      "budget_range_seconds": {"low": 175, "central": 205, "high": 250}
     },
     {
       "unit_id": "U004",
-      "title": "关键机制B",
-      "page_ids": [],
-      "depends_on": [
-        "U003"
-      ],
+      "title": "更新机制与运行闭环",
+      "page_ids": ["P007", "P008"],
+      "depends_on": ["U003"],
       "role": "core",
       "segments": [
         {
           "segment_id": "U004-1",
-          "action": "已知前提",
-          "budget_seconds": 60,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P007",
+          "action": "在同一算例中解释更新引入的状态差异",
+          "budget_seconds": 65,
+          "includes": ["前后结果比较"],
+          "basis": "对象和图例已建立，只讲新增状态及其必要条件。"
         },
         {
           "segment_id": "U004-2",
-          "action": "新图映射",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U004-3",
-          "action": "操作与状态",
-          "budget_seconds": 240,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U004-4",
-          "action": "主算例延伸",
-          "budget_seconds": 240,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U004-5",
-          "action": "归纳",
-          "budget_seconds": 120,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P008",
+          "action": "关联接口、状态生命周期及返回路径",
+          "budget_seconds": 60,
+          "includes": ["局部机制如何形成运行闭环"],
+          "basis": "沿稳定读序复用已知对象，完整接口语义留在页面。"
         }
       ],
-      "budget_seconds": 840,
+      "budget_seconds": 125,
       "actual_seconds": null
     },
     {
       "unit_id": "U005",
-      "title": "软件硬件与运行",
-      "page_ids": [],
-      "depends_on": [
-        "U004"
-      ],
+      "title": "效果与资源",
+      "page_ids": ["P009"],
+      "depends_on": ["U004"],
       "role": "core",
       "segments": [
         {
           "segment_id": "U005-1",
-          "action": "接口",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U005-2",
-          "action": "状态生命周期",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U005-3",
-          "action": "复用图追踪",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U005-4",
-          "action": "归纳",
-          "budget_seconds": 60,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P009",
+          "action": "对齐比较条件，解释后端访问次数及剩余资源开销",
+          "budget_seconds": 70,
+          "includes": ["数据图或表格的读法", "结果与机制的联系"],
+          "basis": "听众已了解算例，按页内行列指出决定性的差异，不逐格念表。"
         }
       ],
-      "budget_seconds": 600,
+      "budget_seconds": 70,
       "actual_seconds": null
     },
     {
       "unit_id": "U006",
-      "title": "效果资源及技术位置",
-      "page_ids": [],
-      "depends_on": [
-        "U005"
-      ],
+      "title": "适用条件与取舍",
+      "page_ids": ["P010"],
+      "depends_on": ["U005"],
       "role": "core",
       "segments": [
         {
           "segment_id": "U006-1",
-          "action": "比较条件",
-          "budget_seconds": 60,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U006-2",
-          "action": "数量关系",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U006-3",
-          "action": "系统原因与取舍",
-          "budget_seconds": 180,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P010",
+          "action": "关联有效期、新鲜度需求和资源代价",
+          "budget_seconds": 55,
+          "includes": ["结论的适用条件"],
+          "basis": "在已建立的数量关系上解释取舍，条件在页上明示，备注展开因果。"
         }
       ],
-      "budget_seconds": 420,
+      "budget_seconds": 55,
       "actual_seconds": null
     },
     {
       "unit_id": "U007",
-      "title": "演进及路线判断",
-      "page_ids": [],
-      "depends_on": [
-        "U006"
-      ],
+      "title": "路线判断",
+      "page_ids": ["P011"],
+      "depends_on": ["U006"],
       "role": "core",
       "segments": [
         {
           "segment_id": "U007-1",
-          "action": "约束变化",
-          "budget_seconds": 120,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U007-2",
-          "action": "路线条件",
-          "budget_seconds": 120,
-          "includes": [],
-          "basis": "editable_initial_estimate"
-        },
-        {
-          "segment_id": "U007-3",
-          "action": "结论",
-          "budget_seconds": 60,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P011",
+          "action": "说明方案选择依据及适用范围",
+          "budget_seconds": 50,
+          "includes": ["回到本次研究目的"],
+          "basis": "用前页证据收束选择，不加入未经解释的新机制。"
         }
       ],
-      "budget_seconds": 300,
+      "budget_seconds": 50,
       "actual_seconds": null
     },
     {
       "unit_id": "U008",
       "title": "总结",
-      "page_ids": [],
-      "depends_on": [
-        "U007"
-      ],
+      "page_ids": ["P012"],
+      "depends_on": ["U007"],
       "role": "core",
       "segments": [
         {
           "segment_id": "U008-1",
-          "action": "主线与结论",
-          "budget_seconds": 120,
-          "includes": [],
-          "basis": "editable_initial_estimate"
+          "page_id": "P012",
+          "action": "回到研究命题，概括机制、结果与保留条件",
+          "budget_seconds": 35,
+          "includes": ["进入问答的承接"],
+          "basis": "集中回收已解释内容，完整要点可供听众独立回看。"
         }
       ],
-      "budget_seconds": 120,
+      "budget_seconds": 35,
       "actual_seconds": null
     }
   ],
   "separate_activities": [
-    {
-      "activity": "独立演示切换",
-      "seconds": 60
-    },
-    {
-      "activity": "机动",
-      "seconds": 120
-    },
-    {
-      "activity": "开放问答",
-      "seconds": 660
-    }
+    {"activity": "独立机动", "seconds": 30},
+    {"activity": "开放问答", "seconds": 120}
   ],
   "rehearsal": {
     "status": "not_performed",
@@ -350,10 +224,11 @@
     "actual_seconds": null
   },
   "review": [
-    "同步发生的主判断、读图或推导合并为同一片段，在includes记录；分段相加只计不重叠片段。",
-    "全场预算含问答与机动；不能把机动同时分配给另一已计活动。",
-    "内容预算3660秒，独立活动840秒，总计4500秒。",
-    "初始预算不代表已验证的演讲时长；按实际版本记录排练并校准。",
-    "U003具体演示难度区间与重叠合并；本表总预算取各单元中值。仅改变U003时全场为73—78分钟，其余单元待项目逐项校准。"
+    "普通内容页约30—90秒是初始参考，封面可短、复杂页可长；本例不是页数、讲稿字数或时长配额。",
+    "同页片段按page_id合计；概括、读图与因果同步时合并计入includes，只累加互不重叠的片段。",
+    "正式讲述750秒，独立活动150秒，总计900秒；机动不能同时分配给已计活动。",
+    "本例假设用户明确15分钟，最终路线应服从该总时长；若核心链超时，先改善读序并调整范围。",
+    "U003低/中/高为175/205/250秒；其余项保持中值时全场为870/900/945秒。上界超过约定时需重新统筹，不能宣称仍是15分钟。",
+    "预算不代表已验证的演讲效果；当前未排练，按实际页面与完整备注成稿记录真实用时。"
   ]
 }

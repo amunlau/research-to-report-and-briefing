@@ -1,218 +1,91 @@
-# Codex：Windows、Linux与WSL安装及使用
+# 在 Codex 中安装与使用
 
-核对日期：2026-10-16。本文依据当前OpenAI官方文档，使用默认用户目录。技能自身版本见仓库`SKILL.md`；本机Codex版本用`codex --version`查看。
+适用于本仓库 **2.0.0**。功能、依赖和共同安装约定以 [README](../README.md) 为主；字体、路径、引擎和渲染差异见[环境适配](../references/portability.md)。
 
-## 1．默认目录与运行环境
+## 1. 准备源码与宿主
 
-| 用途 | Windows原生 | Linux或WSL内部 |
-| --- | --- | --- |
-| 用户级技能根目录 | `%USERPROFILE%\.agents\skills\` | `~/.agents/skills/` |
-| 本技能安装目录 | `%USERPROFILE%\.agents\skills\research-to-report-and-briefing\` | `~/.agents/skills/research-to-report-and-briefing/` |
-| 用户配置文件 | `%USERPROFILE%\.codex\config.toml` | `~/.codex/config.toml` |
-| 项目级技能目录 | `<项目根目录>\.agents\skills\research-to-report-and-briefing\` | `<项目根目录>/.agents/skills/research-to-report-and-briefing/` |
-| 项目级配置文件 | `<项目根目录>\.codex\config.toml` | `<项目根目录>/.codex/config.toml` |
+已有可用的 Codex 即可安装技能；宿主安装与登录请使用 [Codex 官方说明](https://learn.chatgpt.com/docs/codex/cli)。技能本身不提供宿主安装器、联网服务或 PPT 制作引擎。
 
-技能目录与配置目录承担不同职责。当前新安装采用`.agents/skills`；此前某些环境中存在的`.codex/skills`不作为本文的新安装默认位置。项目配置仅在信任该项目后加载。[官方技能目录](https://learn.chatgpt.com/docs/build-skills#where-to-save-skills)、[配置说明](https://learn.chatgpt.com/docs/config-file/config-basic)。
-
-Windows原生程序使用Windows用户目录；在WSL中启动的Codex使用该Linux发行版的用户目录，例如`/home/alice/.agents/skills/`。WSL按独立Linux环境安装，当前Codex需要WSL2。以下Windows与Linux命令分别在各自终端执行。[官方WSL说明](https://learn.chatgpt.com/docs/windows/wsl)。
-
-## 2．Windows原生安装
-
-已有可用的Codex桌面端或IDE扩展时，可直接进行技能目录放置并在宿主中选择技能；下列CLI步骤提供终端使用方式。
-
-### 2.1 准备终端与依赖
-
-使用PowerShell。准备Git，以及Python 3.9或以上版本；Python用于本技能的项目记忆助手。可从[Git官方](https://git-scm.com/install/windows)和[Python官方](https://www.python.org/downloads/windows/)安装。
-
-```powershell
-git --version
-py -3 --version
-```
-
-如果Python已配置为`python`命令，可将后文的`py -3`替换为`python`，先确认其版本。
-
-### 2.2 安装Codex并登录
-
-在新PowerShell窗口运行官方Windows安装命令：
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"
-```
-
-按安装器提示完成后，重新打开终端并检查命令：
-
-```powershell
-Get-Command codex
-codex --version
-```
-
-安装器负责程序位置与PATH；`Get-Command`给出当前实际执行路径，技能文件放入第1节的用户级技能目录。[官方CLI安装说明](https://learn.chatgpt.com/docs/codex/cli)。
-
-### 2.3 安装本技能
-
-将`<仓库URL>`替换为本仓库发布后的真实Git地址，再执行：
-
-```powershell
-$SkillParent = Join-Path $env:USERPROFILE '.agents\skills'
-$SkillRoot = Join-Path $SkillParent 'research-to-report-and-briefing'
-New-Item -ItemType Directory -Path $SkillParent -Force | Out-Null
-git clone '<仓库URL>' "$SkillRoot"
-Test-Path -LiteralPath (Join-Path $SkillRoot 'SKILL.md')
-```
-
-最后一行应返回`True`。目标目录已有安装时，使用第7节的更新方法。
-
-也可下载仓库ZIP，解压后把包含`SKILL.md`、`references`、`assets`、`scripts`的完整目录放到`$SkillRoot`。最终应直接存在`$SkillRoot\SKILL.md`，而不是再多套一层仓库目录。
-
-### 2.4 创建研究项目并使用
-
-```powershell
-$ProjectRoot = Join-Path $env:USERPROFILE 'research-projects\my-topic'
-New-Item -ItemType Directory -Path $ProjectRoot -Force | Out-Null
-codex -C "$ProjectRoot" --search
-```
-
-首次启动按CLI提示登录。进入会话后，用`/skills`选择技能，或输入：
+在存放源码的位置取得本仓库：
 
 ```text
-$research-to-report-and-briefing
-请围绕本目录的研究主题开展独立调研，面向跨方向系统专家撰写报告。
-已有草稿仅作参考；关键机制需要原图、完整算例和可追踪来源。
-请按本轮成果范围维护辅助文档，并检查实际成品。
+git clone https://github.com/amunlau/research-to-report-and-briefing.git research-to-report-and-briefing
+cd research-to-report-and-briefing
 ```
 
-`--search`用于需要当前资料的联网检索；已有冻结资料的纯文字修订可直接运行`codex -C "$ProjectRoot"`。CLI或IDE中使用`$`提及技能，桌面端可通过技能面板或`@`选择。[官方调用说明](https://learn.chatgpt.com/docs/build-skills#how-codex-uses-skills)。
+也可从[仓库页面](https://github.com/amunlau/research-to-report-and-briefing)下载 ZIP。将直接包含 `SKILL.md` 的解压目录改名为 `research-to-report-and-briefing`，去掉 `-main` 等后缀，再进入该目录。使用前查看 `SKILL.md` 的 `metadata.version`，确认拿到所需版本。
 
-## 3．Linux原生安装
+研究项目、生成文件和虚拟环境均放在源码仓库之外。安装前使用干净源码，避免夹带个人配置、凭据、缓存或临时资料；Git 的忽略规则不代表所有被忽略文件都会自动从安装中排除。
 
-### 3.1 准备依赖
+## 2. 选择安装位置
 
-Debian/Ubuntu可以运行：
+| 范围 | 技能目录 |
+| --- | --- |
+| 当前用户 | `~/.agents/skills/research-to-report-and-briefing/` |
+| 指定项目 | `<项目>/.agents/skills/research-to-report-and-briefing/` |
 
-```bash
-sudo apt update
-sudo apt install -y git curl python3
-git --version
-python3 --version
-```
+`~` 是运行 Codex 的用户主目录。Windows 原生与 Linux/WSL 使用各自的用户目录；自定义或旧环境按实际发现路径处理。两种范围通常选一种，避免同名副本混淆。[官方本地发现规则](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills)
 
-其他发行版用相应包管理器安装Git、curl及Python，确认Python至少为3.9；后续步骤相同。
+### 推荐：使用随包安装助手
 
-### 3.2 安装Codex
-
-```bash
-curl -fsSL https://chatgpt.com/codex/install.sh | sh
-```
-
-完成安装后按安装器提示使PATH生效；新开终端检查：
-
-```bash
-command -v codex
-codex --version
-```
-
-这是当前官方独立安装器路径；已使用npm等渠道安装的用户可沿原渠道维护，不需要为技能重新安装一份CLI。[官方安装渠道](https://learn.chatgpt.com/docs/codex/cli)。
-
-### 3.3 安装技能并启动项目
-
-```bash
-mkdir -p "$HOME/.agents/skills"
-git clone '<仓库URL>' "$HOME/.agents/skills/research-to-report-and-briefing"
-test -f "$HOME/.agents/skills/research-to-report-and-briefing/SKILL.md"
-
-mkdir -p "$HOME/research-projects/my-topic"
-codex -C "$HOME/research-projects/my-topic" --search
-```
-
-先替换真实仓库地址。`test -f`成功时通常没有输出；可用`ls`查看该`SKILL.md`。会话内的登录、`/skills`及`$research-to-report-and-briefing`调用与Windows相同。
-
-## 4．Windows上的WSL2
-
-若选择在WSL运行，先在管理员PowerShell安装并进入发行版：
-
-```powershell
-wsl --install
-wsl
-```
-
-完成Linux用户创建后，在WSL终端执行第3节。技能装到WSL的`~/.agents/skills/`，配置在WSL的`~/.codex/config.toml`。研究项目宜放在Linux用户目录，例如`~/research-projects/my-topic`；不要把Windows侧已经安装CLI视为WSL侧安装已完成。[官方WSL步骤](https://learn.chatgpt.com/docs/windows/wsl)。
-
-## 5．项目记忆助手
-
-助手从技能目录执行，项目内容写到独立研究目录。根据本轮成果选择`--deliverable`，以下示例同时请求报告与PPT，并使用六份辅助记录。
+在上述源码目录执行；需要 Python 3.9+，助手只用标准库。
 
 Windows PowerShell：
 
 ```powershell
-$SkillRoot = Join-Path $env:USERPROFILE '.agents\skills\research-to-report-and-briefing'
-$ProjectRoot = Join-Path $env:USERPROFILE 'research-projects\my-topic'
-py -3 -X utf8 "$SkillRoot\scripts\project_memory.py" init --root "$ProjectRoot" --topic "研究主题" --deliverable report --deliverable slides --memory-profile full
-py -3 -X utf8 "$SkillRoot\scripts\project_memory.py" validate-config --root "$ProjectRoot"
+py -3 scripts/setup_skill.py check --host codex
+py -3 scripts/setup_skill.py install --host codex
 ```
 
 Linux/WSL：
 
 ```bash
-skill_root="$HOME/.agents/skills/research-to-report-and-briefing"
-project_root="$HOME/research-projects/my-topic"
-python3 "$skill_root/scripts/project_memory.py" init --root "$project_root" --topic "研究主题" --deliverable report --deliverable slides --memory-profile full
-python3 "$skill_root/scripts/project_memory.py" validate-config --root "$project_root"
+python3 scripts/setup_skill.py check --host codex
+python3 scripts/setup_skill.py install --host codex
 ```
 
-初始化后，项目包含`.research-briefing/project.json`与`研究辅助文档/`。按实际任务填写，再开始制作。`compact`可将六类信息合为三份文件。已有项目直接读取现有记录，不必重复初始化。
-
-`validate-config`默认检查结构；已登记交付清单并生成成品后，加入`--check-delivery`核对必交文件。快照记录的是文件身份，原文件另行保留。更多命令见[项目记忆与配置](../references/project-memory.md)。
-
-## 6．项目级安装与必要配置
-
-仅一个项目使用时，可把技能内容放入该项目的以下位置：
+按实际环境可用 `python` 或解释器完整路径替换命令开头。只安装到一个已存在的研究项目时，在 `install --host codex` 后追加：
 
 ```text
-my-project/
-└── .agents/
-    └── skills/
-        └── research-to-report-and-briefing/
-            ├── SKILL.md
-            ├── references/
-            ├── assets/
-            └── scripts/
+--scope project --project "实际项目路径"
 ```
 
-从仓库复制时保留完整内容，省略仓库自己的`.git`目录；这样上层项目可直接跟踪技能文件。随后从`my-project`启动Codex。用户级与项目级二选一即可；同名安装会分别出现，不会合并。[技能发现规则](https://learn.chatgpt.com/docs/build-skills#where-to-save-skills)。
+使用已确认的其他技能父目录时，使用 `install --skills-dir "实际技能父目录"`，不要同时给出 `--host`、`--scope` 或 `--project`。
 
-默认安装通常不需要新增技能启用项。需要实时研究时可用前述`--search`；若长期采用实时检索，可在现有用户`config.toml`中设置顶层键：
+助手会检查包资源，跳过仓库 `.git` 等明确排除项后复制；它不会配置 Codex 或安装外部依赖。`check` 通过仅说明本包检查通过，不代表宿主已加载、联网可用或 PPT 已能制作和渲染。
 
-```toml
-web_search = "live"
+### 手动复制
+
+无需 Python 也能手动安装：将干净源码的完整技能目录复制到所选位置，省略 `.git`，保留配套资源。最终必须直接存在 `skills/research-to-report-and-briefing/SKILL.md`。目标已有内容时，先按下一节处理。
+
+## 3. 升级并保留已有安装
+
+1. 先确认当前加载路径，并保留已有安装及个人修改。若旧目录是 Git 仓库，也保留其历史和未提交改动。
+2. 将旧目录移至技能发现范围之外作为备份，使原安装目标不存在；不要仅复制备份后把旧目录留在目标位置。
+3. 从准备好的干净新源码运行安装助手，或复制完整新目录。助手遇到内容不同的已有目标会拒绝覆盖；相同内容则不重复写入。
+4. 在 Codex 中确认新路径与版本。更新未出现时，重新启动会话。[官方更新发现说明](https://learn.chatgpt.com/docs/build-skills)
+
+版本号相同也可能有内容修订，应同时核对源文件或提交记录。原有项目资料与 `.research-briefing` 项目记录留在研究目录中，无需随技能升级重建。
+
+## 4. 在研究项目中调用
+
+在独立的研究项目目录打开 Codex，在**对话输入框**选择技能或输入：
+
+```text
+$research-to-report-and-briefing
+根据本目录材料制作面向技术评审的PPT。必要时补充调研，说明关键机制、
+证据与方案取舍，使用完整图表和可直接照读的逐页备注。总时长约20分钟。
 ```
 
-编辑已有文件时合并该设置，保留其他配置。技能的研究重点、成果组合和时长写在研究项目记录中，模型与运行权限由Codex环境决定。[官方配置选项](https://learn.chatgpt.com/docs/config-file/config-basic)。
+这是对话示例，不是终端命令。也可明确要求“使用 research-to-report-and-briefing 完成……”；确认选择器中的技能路径，避免调用旧副本。[官方技能调用说明](https://learn.chatgpt.com/docs/build-skills)
 
-## 7．更新与检查
+首次制作前，让代理核对可用搜索工具、PPT 引擎、字体与最终文件渲染方式。`agents/openai.yaml` 是可选界面信息；不需要把技能正文复制进 `AGENTS.md`。
 
-Git安装的技能可在所选安装目录更新：
+## 5. 常见问题
 
-```powershell
-git -C "$env:USERPROFILE\.agents\skills\research-to-report-and-briefing" pull --ff-only
-```
+- **找不到技能**：核对目录层级、当前用户/WSL环境、所选作用域及同名副本，再刷新或重启。
+- **助手提示目录名不匹配**：去掉 ZIP 解压目录后缀，使用本技能的标准名称。
+- **目标内容不同**：先保留并移开旧目录，再安装；不要用覆盖操作绕过保护。
+- **技能能加载但无法制作PPT**：检查实际制作引擎与其依赖，详见 [README](../README.md#依赖与能力边界)。
 
-```bash
-git -C "$HOME/.agents/skills/research-to-report-and-briefing" pull --ff-only
-```
-
-ZIP或复制安装按新版本重新放置内容；本地自行修改的部分先提交或另存。Codex会检测技能变化，未出现时重新启动。配置文件改动后按官方要求重启Codex。[加载与重载](https://learn.chatgpt.com/docs/build-skills)。
-
-遇到未识别时，依次核对：
-
-1. `SKILL.md`是否直接位于对应技能目录，是否多了一层ZIP文件夹。
-2. 当前运行的是Windows原生还是WSL/Linux，是否检查了对应用户目录。
-3. 是否安装了两份同名技能；按选择器中的实际路径确认要使用的一份。
-4. `config.toml`中是否有针对该技能的`[[skills.config]]`且`enabled = false`。需要恢复时修改该已有项，再重启。
-5. Python命令是否存在、版本是否满足助手要求。Word/PPT/PDF制作还需要宿主提供相应工具。
-
-## 官方依据
-
-- [Build skills](https://learn.chatgpt.com/docs/build-skills)：目录、调用、变化检测、禁用配置与元数据。
-- [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)：Windows/Linux当前安装器与登录。
-- [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic)：默认配置文件、配置层次、实时检索。
-- [WSL](https://learn.chatgpt.com/docs/windows/wsl)：WSL2运行环境与安装位置。
+本页官方目录与调用规则核对于 2026-10-21。文档核对不代表所有 Codex 版本、Windows/Linux 或渲染组合均已实测。

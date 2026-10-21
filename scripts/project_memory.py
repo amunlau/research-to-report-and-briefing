@@ -18,7 +18,7 @@ import uuid
 
 SCHEMA = 'research-briefing/2'
 LEGACY = 'research-briefing/1'
-VERSION = '1.2.1'
+VERSION = '2.0.0'
 SEMVER = (r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
           r'(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
           r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?'
@@ -39,6 +39,8 @@ class MemoryError(ValueError):
 
 
 def emit(value):
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
     print(json.dumps(value, ensure_ascii=False, indent=2))
 
 
@@ -57,7 +59,8 @@ def require(condition, message):
 
 def write_new(path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
-    stream = path.open('x', encoding='utf-8', newline='\n')
+    stream = (path.open('xb') if isinstance(payload, bytes)
+              else path.open('x', encoding='utf-8', newline='\n'))
     try:
         with stream:
             stream.write(payload)
@@ -68,15 +71,24 @@ def write_new(path, payload):
 
 def inside(root, value, relative=False):
     require(isinstance(value, str) and bool(value.strip()), 'Path must be a non-empty string.')
+    require('\x00' not in value, 'Path cannot contain a null character.')
     raw = Path(value)
     require(not relative or not raw.is_absolute(), 'Configuration paths must be project-relative: ' + value)
-    target = (raw if raw.is_absolute() else root / raw).resolve()
+    try:
+        target = (raw if raw.is_absolute() else root / raw).resolve()
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise MemoryError('Cannot resolve project path: ' + repr(value)) from exc
     try:
         rel = target.relative_to(root)
     except ValueError as exc:
         raise MemoryError('Path must remain inside the selected project: ' + value) from exc
     require(bool(rel.parts), 'Select a file, not the project root.')
     return target, rel.as_posix()
+
+
+def path_key(value):
+    """Use host path conventions; POSIX paths may differ only in case."""
+    return os.path.normcase(value)
 
 
 def fingerprint(path):
@@ -103,15 +115,24 @@ def finite_json_float(value):
     return number
 
 
+def unique_json_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError('Duplicate JSON key: ' + key)
+        result[key] = value
+    return result
+
+
 def load_json(path, with_identity=False):
     try:
         before = path.stat() if with_identity else None
         payload = path.read_bytes()
         after = path.stat() if with_identity else None
-        data = json.loads(payload.decode('utf-8-sig'), parse_constant=reject_json_constant,
-                          parse_float=finite_json_float)
+        data = json.loads(payload.decode('utf-8-sig'), object_pairs_hook=unique_json_object,
+                          parse_constant=reject_json_constant, parse_float=finite_json_float)
     except (OSError, ValueError) as exc:
-        raise MemoryError('Cannot read JSON: ' + str(path)) from exc
+        raise MemoryError('Cannot read JSON ' + str(path) + ': ' + str(exc)) from exc
     if with_identity:
         require((before.st_size, before.st_mtime_ns, before.st_dev, before.st_ino)
                 == (after.st_size, after.st_mtime_ns, after.st_dev, after.st_ino),
@@ -142,23 +163,28 @@ def string_list(value, label, choices=None, nonempty=False):
     require(choices is None or set(value) <= set(choices), label + ' contains unsupported values.')
 
 
-def config_path(root, value, label, must_exist=False):
+def config_path(root, value, label, must_exist=False, check_file_type=True):
+    # Enforce the existing portable configuration contract before native Path
+    # parsing: on POSIX, a backslash or Windows drive can be a literal filename.
+    require(isinstance(value, str) and not re.search(r'\\|^[A-Za-z]:|^/|(?:^|/)\.\.(?:/|$)', value),
+            label + ' requires a project-relative path with / separators and no parent traversal.')
     path, rel = inside(root, value, relative=True)
     require(value == rel, label + ' requires a normalized project-relative path with / separators: ' + rel)
-    require(not path.exists() or path.is_file(), label + ' must refer to a file: ' + rel)
+    require(not check_file_type or not path.exists() or path.is_file(),
+            label + ' must refer to a file: ' + rel)
     require(not must_exist or path.is_file(), label + ' file is missing: ' + rel)
     return path, rel
 
 
-def expected_items(root, items, kinds):
+def expected_items(root, items, kinds, check_file_type=True):
     require(isinstance(items, list), 'delivery.expected_artifacts must be a list.')
     seen = set()
     for item in items:
         object_fields(item, ('kind', 'path', 'version', 'required'), 'Expected artifact')
         require(item['kind'] in kinds, 'Expected artifact kind must belong to deliverables.')
-        path, rel = config_path(root, item['path'], 'Expected artifact')
-        require(rel.casefold() not in seen, 'Duplicate expected artifact path: ' + rel)
-        seen.add(rel.casefold())
+        path, rel = config_path(root, item['path'], 'Expected artifact', check_file_type=check_file_type)
+        require(path_key(rel) not in seen, 'Duplicate expected artifact path: ' + rel)
+        seen.add(path_key(rel))
         require(path.suffix.lower() in EXTENSIONS[item['kind']], 'Unexpected file extension for ' + item['kind'] + ': ' + rel)
         require(isinstance(item['version'], str) and bool(item['version'].strip()), 'Expected artifact version must be non-empty text.')
         require(type(item['required']) is bool, 'Expected artifact required must be boolean.')
@@ -325,7 +351,7 @@ def update(args):
         data['delivery']['expected_artifacts'] = []
         data['memory_history'] = []
         backup, _ = inside(root, META + '/migrations/project-v1-' + uuid.uuid4().hex[:12] + '.json')
-        documents[backup] = cfg.read_text(encoding='utf-8-sig')
+        documents[backup] = cfg.read_bytes()
     data['deliverables'] = list(dict.fromkeys(data['deliverables'] + (args.add_deliverable or [])))
     if args.memory_profile and args.memory_profile != data['memory_profile']:
         require(data['memory_profile'] == 'compact' and args.memory_profile == 'full', 'Only compact -> full promotion is supported.')
@@ -400,10 +426,10 @@ def snapshot(args):
     entries, seen = [], set()
     for value in files:
         path, rel = inside(root, value)
-        if rel.casefold() not in seen:
+        if path_key(rel) not in seen:
             entries.append({'path': rel, **fingerprint(path)})
-            seen.add(rel.casefold())
-    omitted = [item['path'] for item in expected if item['required'] and item['path'].casefold() not in seen]
+            seen.add(path_key(rel))
+    omitted = [item['path'] for item in expected if item['required'] and path_key(item['path']) not in seen]
     require(not omitted, 'Required deliverables were omitted from --file: ' + ', '.join(omitted))
     payload = {'schema_version': SCHEMA, 'label': args.label, 'created_at_utc': now(), 'files': entries}
     if args.expected:
@@ -426,9 +452,9 @@ def verify(args):
         require(isinstance(entry, dict) and isinstance(entry.get('path'), str), 'Malformed snapshot entry.')
         path, rel = inside(root, entry['path'], relative=True)
         sha, size = entry.get('sha256'), entry.get('bytes')
-        require(rel.casefold() not in seen and isinstance(sha, str) and re.fullmatch(r'[0-9a-f]{64}', sha)
+        require(path_key(rel) not in seen and isinstance(sha, str) and re.fullmatch(r'[0-9a-f]{64}', sha)
                 and type(size) is int and size >= 0, 'Invalid or duplicate snapshot entry: ' + rel)
-        seen.add(rel.casefold())
+        seen.add(path_key(rel))
         if not path.is_file():
             findings.append({'path': rel, 'status': 'missing'})
         else:
@@ -436,9 +462,11 @@ def verify(args):
             if current != {'bytes': size, 'sha256': sha}:
                 findings.append({'path': rel, 'status': 'changed', 'expected': {'bytes': size, 'sha256': sha}, 'actual': current})
     if 'expected_artifacts' in data:
-        expected_items(root, data['expected_artifacts'], KINDS)
+        # Validate the recorded contract; current file differences are findings,
+        # not malformed snapshot input (for example, a file replaced by a folder).
+        expected_items(root, data['expected_artifacts'], KINDS, check_file_type=False)
         findings.extend({'path': item['path'], 'status': 'missing-from-manifest'} for item in data['expected_artifacts']
-                        if item['required'] and item['path'].casefold() not in seen)
+                        if item['required'] and path_key(item['path']) not in seen)
     config_status = 'not-bound'
     if 'config_identity' in data:
         entry = data['config_identity']
@@ -447,9 +475,10 @@ def verify(args):
         require(type(entry['bytes']) is int and entry['bytes'] >= 0 and isinstance(entry['sha256'], str)
                 and re.fullmatch(r'[0-9a-f]{64}', entry['sha256']), 'Invalid config identity.')
         config_status = 'missing' if not path.is_file() else 'match' if fingerprint(path) == {'bytes': entry['bytes'], 'sha256': entry['sha256']} else 'changed'
-    emit({'status': 'match' if not findings else 'different', 'checked': len(entries),
+    matches = not findings and config_status in ('not-bound', 'match')
+    emit({'status': 'match' if matches else 'different', 'checked': len(entries),
           'config_status': config_status, 'findings': findings})
-    return 0 if not findings else 1
+    return 0 if matches else 1
 
 
 def main(argv=None):

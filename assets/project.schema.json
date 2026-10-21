@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:research-to-report-and-briefing:project:2",
   "title": "Research and briefing project configuration v2",
-  "description": "Machine authority for current scalar project settings. Authoring records explain rationale; evidence ledgers contain research facts. The stdlib CLI performs schema-equivalent checks plus relative-path containment, referenced memory existence, expected output suffix/kind matching and duration min <= max. Missing planned outputs and visual/timing reference files are allowed and reported. Legacy /1 configurations are inspected by the CLI and migrated only with update --migrate.",
+  "description": "Machine authority for current scalar project settings. Authoring records explain rationale; evidence ledgers contain research facts. The stdlib CLI implements core structure and type checks and additionally rejects blank text, non-finite numbers, invalid dates, paths outside the project, missing memory files, expected output suffix/kind mismatches and duration min > max; it does not load or execute this JSON Schema. Planned output files may be missing during configuration validation; missing visual/timing reference files are reported. Legacy /1 configurations are inspected by the CLI and migrated only with update --migrate.",
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:research-briefing:deck:1",
+  "title": "Evidence-linked deck plan, not a renderer input",
+  "type": "object",
+  "required": ["schema_version", "source_ledger", "mode", "canvas", "pages", "engine_map"],
+  "properties": {
+    "schema_version": {"const": "research-briefing-deck/1"},
+    "source_ledger": {"$ref": "#/$defs/path"},
+    "mode": {"enum": ["reference", "hybrid", "talk"], "default": "hybrid", "description": "Explicitly record the chosen use; hybrid is the authoring default when the user has not specified one."},
+    "notes_enabled": {"type": "boolean", "default": true, "description": "When omitted, author complete read-aloud notes by default; false records the user's choice to omit them. The schema permits empty drafts; audit_content requires non-blank notes at the final stage when enabled. This annotation does not generate notes."},
+    "canvas": {"type": "object", "required": ["width_pt", "height_pt"], "properties": {"width_pt": {"type": "number", "exclusiveMinimum": 0}, "height_pt": {"type": "number", "exclusiveMinimum": 0}}, "additionalProperties": false},
+    "pages": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/page"}},
+    "engine_map": {"type": "array", "items": {"$ref": "#/$defs/engineMap"}},
+    "extensions": {"type": "object"}
+  }, "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/|[A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000-\\u001f\\u007f]+$"},
+    "exception": {"type": "object", "required": ["fact_id", "treatment", "visible_note"], "properties": {"fact_id": {"$ref": "#/$defs/id"}, "treatment": {"enum": ["qualified", "disputed", "hypothetical"]}, "visible_note": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+    "geometry": {"type": "object", "required": ["x", "y", "w", "h", "unit"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "w": {"type": "number", "exclusiveMinimum": 0}, "h": {"type": "number", "exclusiveMinimum": 0}, "unit": {"const": "pt"}}, "additionalProperties": false},
+    "block": {
+      "type": "object", "required": ["id", "kind", "content", "fact_ids", "asset_ids", "target_editability"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["text", "table", "chart", "figure", "diagram", "equation", "source", "callout"]},
+        "content": {"type": ["string", "object", "array"]},
+        "fact_ids": {"$ref": "#/$defs/ids"}, "asset_ids": {"$ref": "#/$defs/ids"},
+        "target_editability": {"enum": ["native-text", "native-shape", "native-table", "native-chart", "native-formula", "image"]},
+        "geometry": {"$ref": "#/$defs/geometry"}, "font_pt": {"type": "number", "exclusiveMinimum": 0},
+        "source_locators": {"type": "array", "items": {"type": "string"}}
+      }, "additionalProperties": false
+    },
+    "page": {
+      "type": "object", "required": ["id", "role", "archetype", "title", "takeaway", "fact_ids", "asset_ids", "blocks", "reading_path", "speaker_notes", "author_explainer_refs", "density", "evidence_exceptions"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "role": {"enum": ["title", "section", "core", "detail", "appendix", "summary"]},
+        "archetype": {"type": "string", "minLength": 1}, "title": {"type": "string", "minLength": 1}, "takeaway": {"type": "string", "minLength": 1},
+        "fact_ids": {"$ref": "#/$defs/ids"}, "asset_ids": {"$ref": "#/$defs/ids"},
+        "blocks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/block"}},
+        "reading_path": {"$ref": "#/$defs/ids"}, "speaker_notes": {"type": "string"},
+        "author_explainer_refs": {"$ref": "#/$defs/ids"},
+        "density": {"type": "object", "properties": {"profile": {"type": "string"}, "body_min_pt": {"type": "number", "exclusiveMinimum": 0}, "table_min_pt": {"type": "number", "exclusiveMinimum": 0}, "observed_chars": {"type": "integer", "minimum": 0}, "adjustment": {"type": "string"}}, "additionalProperties": true},
+        "evidence_exceptions": {"type": "array", "items": {"$ref": "#/$defs/exception"}}
+      }, "additionalProperties": false
+    },
+    "engineMap": {
+      "type": "object", "required": ["page_id", "backend", "backend_version", "output_path", "slide_number", "object_ids"],
+      "properties": {
+        "page_id": {"$ref": "#/$defs/id"}, "backend": {"type": "string", "minLength": 1}, "backend_version": {"type": ["string", "null"]},
+        "output_path": {"$ref": "#/$defs/path"}, "slide_number": {"type": "integer", "minimum": 1},
+        "object_ids": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string", "minLength": 1}}},
+        "route": {"type": "string"}, "reading_mode": {"type": "string"},
+        "fact_id_map": {"type": "object", "additionalProperties": {"$ref": "#/$defs/id"}},
+        "source_id_map": {"type": "object", "additionalProperties": {"$ref": "#/$defs/id"}},
+        "asset_path_map": {"type": "object", "additionalProperties": {"$ref": "#/$defs/path"}},
+        "actual_objects": {"type": "array", "items": {"type": "object", "required": ["block_id", "kind", "detail"], "properties": {"block_id": {"$ref": "#/$defs/id"}, "kind": {"enum": ["native-text", "native-shape", "native-table", "native-chart", "native-formula", "raster-image", "vector-image", "mixed", "unknown"]}, "detail": {"type": "string", "minLength": 1}, "deviation": {"type": "string"}}, "additionalProperties": false}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

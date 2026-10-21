@@ -2,19 +2,29 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
 .venv/
 venv/
+node_modules/
 
 # Local configuration
 .env
 .env.*
 !.env.example
+!.env.*.example
+/.idea/
+/.vscode/
 
 # Generated build files and project records
 /build/
 /dist/
+/output/
+/tmp/
+/temp/
 *.egg-info/
 /.research-briefing/
 /研究辅助文档/
@@ -25,3 +35,6 @@ Thumbs.db
 Desktop.ini
 ~$*
 *.tmp
+*.swp
+*.swo
+*~

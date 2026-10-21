@@ -1,4 +1,4 @@
-* text=auto
+* text=auto eol=lf
 *.md text eol=lf
 *.py text eol=lf
 *.json text eol=lf
@@ -6,3 +6,16 @@
 *.yml text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf
+.editorconfig text eol=lf
+
+# Preserve binary assets if public examples are added later.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.pptx binary
+*.potx binary
+*.docx binary
+*.zip binary

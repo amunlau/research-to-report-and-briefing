@@ -1,0 +1,71 @@
+{
+  "profile_version": "2.0.0",
+  "profile_id": "dense-technical-reading-16x9-example",
+  "purpose": "阅读型技术讲义的独立起点；使用前按内容、听众和目标观看尺寸校准。不是固定字数配额，也不自动适用于现场投影。",
+  "selection": {
+    "enabled_by_default": false,
+    "requires_reference_file": false,
+    "project_override_allowed": true,
+    "deck_mode": "reference",
+    "note": "默认采用微软雅黑与浅底深正文的蓝色系克制科技风，用户、品牌和模板要求可覆盖。读取后将实际选择保存到项目视觉配置；不要求PPT引擎直接解析本示例。现场与阅读兼用时重新校准字号和图内标签。"
+  },
+  "canvas": {"aspect_ratio": "16:9", "width_in": 13.333333, "height_in": 7.5, "coordinate_unit": "in", "background": "FFFFFF"},
+  "typography": {
+    "font_size_unit": "pt",
+    "cjk_font_candidates": ["Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC"],
+    "latin_font_candidates": ["Microsoft YaHei", "Arial", "Liberation Sans"],
+    "equation_font_candidates": ["Cambria Math", "STIX Two Math"],
+    "font_resolution": "常规中英文标题与正文默认微软雅黑（Microsoft YaHei），明确的用户、品牌或模板要求可覆盖；缺失时选可用字体并记录。数学、代码使用相应用途字体，原图内字体保留；导出替换后核对断行、符号和表格。",
+    "title": {"size": 24, "bold": true, "color": "17324D", "max_lines": 2},
+    "body": {"size": 14, "color": "20272D", "line_spacing_multiple": 1.12},
+    "table_header": {"size": 12, "bold": true},
+    "table_body": {"size": 12},
+    "figure_annotation": {"size": 12},
+    "source_short": {"size": 10, "color": "596873"},
+    "legibility_rule": "这些数值是近距离阅读的编辑起点，不绑定样本精确字号。正文、密表与原图内关键标签分别检查；页数没有固定范围，不能缩到读不清来满足页数。原图标签无法辨认时找高清原件、放大局部或改页面分工。"
+  },
+  "layout": {
+    "grid_columns": 12,
+    "page_margin_left": 0.38,
+    "page_margin_right": 0.38,
+    "title_region": {"x": 0.38, "y": 0.24, "w": 12.573333, "h": 0.85},
+    "content_region": {"x": 0.38, "y": 1.20, "w": 12.573333, "h": 5.70},
+    "source_region": {"x": 0.38, "y": 7.04, "w": 11.65, "h": 0.25},
+    "page_number_region": {"x": 12.20, "y": 7.04, "w": 0.75, "h": 0.25},
+    "column_gutter": 0.20,
+    "block_gap": 0.14,
+    "textbox_padding_in": 0.04,
+    "rule": "根据页型改变区域分配；规格表配结构图、解释文字配原理图、比较表配条件说明、风险或进展矩阵配决策。正文保留完整要点与有意义的分类项目符号，文字和图表相互解释。标题允许内容概要、问题或观点；标题区只提供起始几何，实际高度须由字体和渲染确认。"
+  },
+  "palette": {
+    "primary": "17324D", "accent": "146C94", "body_text": "20272D", "muted_text": "596873",
+    "panel_fill": "F3F5F6", "panel_border": "CDD5DB", "white": "FFFFFF",
+    "semantic_use": "浅底深正文，蓝色用于层级与重点；保留风险、告警和状态的语义色及专业原图颜色，并辅以文字或符号。不靠装饰性发光或强制深色营造科技感，不给每个模块任意换色。"
+  },
+  "density": {
+    "measure_before_setting_limits": true,
+    "character_quota": null,
+    "picture_quota": null,
+    "shape_quota": null,
+    "whitespace_quota": null,
+    "calibration": ["完整问题与必要条件", "明确读序", "表头及原图标签可读", "完整要点与图表相互解释", "现场讲解所需时间"],
+    "overflow_response": ["删重复与空话", "调整内容槽位和图表比例", "局部放大并保留上下文", "分阶段展开", "按逻辑拆页或调整范围"]
+  },
+  "tables": {
+    "header_fill": "EAF1F7", "header_text": "17324D", "border_color": "C4CED5", "border_width_pt": 0.5,
+    "numeric_alignment": "right", "text_alignment": "left",
+    "rule": "单位进入表头或明确单元格；比较条件一致，支持原生表格时保留真实行列；长表按相关逻辑组处理。"
+  },
+  "figures": {
+    "prefer_relevant_source_figures": true,
+    "preserve_aspect_ratio": true,
+    "preserve_caption_legend_and_panel_labels": true,
+    "reading_layers": ["系统位置", "关键路径", "必要局部"],
+    "ai_generated_role": "仅可核验的概念辅助；不能补造型号、端口、带宽或实验结果。"
+  },
+  "screen_validation": {
+    "render_actual_final_file": true,
+    "checks": ["目标观看尺寸下的正文", "原图最小关键标签", "表格单位与合并表头", "公式与中文字体", "来源区域", "图文数值一致", "讲稿指图对应"],
+    "record": "记录目标应用与真实渲染输入身份；源页面预览与PPTX渲染分别报告。"
+  }
+}

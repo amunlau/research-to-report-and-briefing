@@ -1,12 +1,12 @@
 {
   "profile_version": "1.0.0",
   "profile_id": "technical-briefing-16x9-example",
-  "purpose": "可复制到项目内的技术汇报视觉示例；数值由项目选择、覆盖并经实际页面验证。",
+  "purpose": "可复制到项目内的技术、市场与工作汇报视觉示例；数值由项目选择、覆盖并经实际页面校准。",
   "selection": {
     "enabled_by_default": false,
     "requires_reference_file": false,
     "project_override_allowed": true,
-    "note": "选择该示例后按听众、播放环境和内容调整；密度、原图优先等偏好不自动适用于其他项目。"
+    "note": "默认中文字体为微软雅黑，默认采用浅底深正文的蓝色系克制科技风；用户、品牌和模板要求可覆盖。该示例的几何与字号不自动启用，选择后按听众、播放环境和内容调整。"
   },
   "canvas": {
     "aspect_ratio": "16:9",
@@ -18,9 +18,9 @@
   "typography": {
     "font_size_unit": "pt",
     "cjk_font_candidates": ["Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC"],
-    "latin_font_candidates": ["Aptos", "Arial", "Liberation Sans"],
+    "latin_font_candidates": ["Microsoft YaHei", "Arial", "Liberation Sans"],
     "equation_font_candidates": ["Cambria Math", "STIX Two Math"],
-    "font_resolution": "制作前选择已安装字体；替代后重新渲染并检查中文、数学符号、行宽和分页。",
+    "font_resolution": "常规中英文标题与正文默认微软雅黑（Microsoft YaHei）；用户、品牌或模板要求可覆盖。缺失时选可用字体并记录；数学、代码分别使用合适字体，原图内字体保留。替代后检查字形、断行、符号和表格。",
     "title": {"size": 26, "bold": true, "color": "17324D", "max_lines": 2, "line_spacing_multiple": 1.08},
     "section_label": {"size": 13, "bold": true, "color": "36566F"},
     "body": {"size": 17, "color": "1F2933", "line_spacing_multiple": 1.12},
@@ -30,7 +30,7 @@
     "figure_annotation": {"size": 15},
     "source_short": {"size": 11, "color": "52616B"},
     "footer": {"size": 10, "color": "52616B"},
-    "legibility_rule": "字号是编辑起点。现场必须读清的标签、数字和引用标识按播放环境放大；较细文献条目集中到来源页。"
+    "legibility_rule": "字号是编辑起点，不绑定参考稿精确数值。现场必须读清的标签、数字和引用标识按播放环境放大；较细文献条目集中到来源页。密度与页数服从可读性。"
   },
   "layout": {
     "page_margin_left": 0.42,
@@ -45,16 +45,17 @@
     "textbox_padding_in": 0.05,
     "grid_columns": 12,
     "layout_variants": {
-      "mechanism": "主图约占内容宽度62%—72%，相邻区域放步骤或主算例，按图宽调整。",
-      "system": "按真实输入、处理、状态、输出和跨层接口布置，突出当前关键路径。",
-      "comparison": "对比图或表为主，统一条件和单位，旁置简短原因。",
-      "derivation": "输入与对象映射、关键中间量、结果与系统含义形成连续顺序。"
+      "mechanism": "解释文字配关键原理图；相邻区域放完整要点、步骤或算例，图文比例按实际内容调整。",
+      "system": "规格表配结构图，将参数对应到真实组件；按输入、处理、状态、输出和接口布置。",
+      "comparison": "比较图或表配条件说明，统一口径和单位，解释差异成立的范围。",
+      "derivation": "输入与对象映射、关键中间量、结果与系统含义形成连续顺序。",
+      "progress_and_decision": "风险或进展矩阵配决策事项，说明状态依据、影响与下一步行动。"
     }
   },
   "palette": {
     "primary": "17324D",
     "secondary": "146C94",
-    "accent": "B36B00",
+    "accent": "2F75B5",
     "body_text": "1F2933",
     "muted_text": "52616B",
     "panel_fill": "F3F6F8",
@@ -63,8 +64,8 @@
     "semantic_use": {
       "primary": "章节、核心对象和标题",
       "secondary": "当前讲述路径或稳定对象类型",
-      "accent": "新增操作、关键差值或关注量；避免整页同时强调",
-      "meaning": "同一图组内颜色语义保持；用文字、线型或标号同时表达区别。"
+      "accent": "新增操作、关键差值或关注量；蓝色建立重点，避免整页同时强调",
+      "meaning": "浅底深正文；风险、告警和状态使用适合的语义色，专业原图保留原有颜色。用文字、线型或标号同时表达区别，不靠发光或强制深色营造科技感。"
     }
   },
   "figures": {
@@ -72,7 +73,7 @@
     "reading_layers": ["系统位置", "关键路径", "必要局部"],
     "local_zoom": "保留整体位置提示和对应标号，裁剪不删去理解路径所需对象。",
     "bitmap_rule": "按最终尺寸检查关键标签；放大无效时寻找矢量或清晰原件，必要时等义重绘。",
-    "caption_rule": "说明当前对象与读取入口；解释按项目分配到页面、讲稿和详解。"
+    "caption_rule": "说明当前对象与读取入口；页面以完整要点、解释文字或分类项目符号回应图表，讲稿和详解按用途补充。"
   },
   "tables": {
     "header_fill": "17324D",
@@ -85,13 +86,13 @@
     "row_rule": "保留有意义字段和单位，必要时按逻辑组拆表，避免统一缩小全表。"
   },
   "sources": {
-    "on_slide": "短来源名、稳定来源ID和必要定位；完整条目存于来源页或配套文档。",
+    "on_slide": "短来源名或面向读者的引用编号，附必要年份、图号等定位；完整条目存于来源页或配套文档。内部来源ID保留在台账及显示编号映射中，无须露出在页面。",
     "traceability": "图、数据和论断关联各自依据；处理图像保留原件与处理说明。"
   },
   "screen_validation": {
     "render_actual_final_file": true,
     "views": ["整页按预期显示比例", "关键标签与图轴局部", "全稿相邻页连续阅读"],
-    "checks": ["主判断与阅读入口明确", "中文和公式正常", "标签、单位及数字可读", "无裁切遮挡", "颜色与标号语义一致", "来源区域保留且不挤压正文"],
+    "checks": ["本页作用与阅读入口明确", "概要、问题或观点标题服务全场主旨", "中文和公式正常", "标签、单位及数字可读", "无裁切遮挡", "颜色与标号语义一致", "来源区域保留且不挤压正文"],
     "record": "记录渲染文件版本、查看环境及问题修订结果。"
   }
 }

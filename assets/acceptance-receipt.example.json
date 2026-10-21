@@ -6,10 +6,13 @@
   "artifact": {"path": null, "kind": null, "version": null, "bytes": null, "sha256": null},
   "checks": [
     {"id": "content", "method": null, "scope": [], "status": "pending", "findings": []},
+    {"id": "content_preservation", "method": null, "scope": [], "status": "pending", "findings": [], "baseline_path": null, "baseline_sha256": null},
     {"id": "native_structure", "method": null, "scope": [], "status": "pending", "findings": []},
     {"id": "visual_reading", "method": null, "scope": [], "status": "pending", "findings": []}
   ],
-  "render": {"tool": null, "input_sha256": null, "page_count": null, "output_path": null, "inspected_pages": []},
+  "render": {"tool": null, "tool_version": null, "input_sha256": null, "font_environment": null, "settings": {}, "page_count": null, "output_path": null, "inspected_pages": [], "page_records": []},
+  "export_warnings": [],
+  "reused_checks": [],
   "issues": [],
   "rehearsal": {"status": "not_performed", "actual_minutes": null},
   "result": "pending"

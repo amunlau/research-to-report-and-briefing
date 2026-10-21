@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:research-briefing:content:1",
+  "title": "Shared evidence and content ledger",
+  "type": "object",
+  "required": ["schema_version", "topic", "sources", "facts", "assets", "sections"],
+  "properties": {
+    "schema_version": {"const": "research-briefing-content/1"},
+    "topic": {"type": "string", "minLength": 1},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "assets": {"type": "array", "items": {"$ref": "#/$defs/asset"}},
+    "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}},
+    "extensions": {"type": "object"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "text": {"type": "string", "minLength": 1},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/|[A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000-\\u001f\\u007f]+$"},
+    "sourceRef": {
+      "type": "object", "required": ["source_id", "locator", "support", "relation"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/id"}, "locator": {"$ref": "#/$defs/text"},
+        "support": {"$ref": "#/$defs/text"},
+        "relation": {"enum": ["supports", "contradicts", "context"]}
+      }, "additionalProperties": false
+    },
+    "exception": {
+      "type": "object", "required": ["fact_id", "treatment", "visible_note"],
+      "properties": {"fact_id": {"$ref": "#/$defs/id"}, "treatment": {"enum": ["qualified", "disputed", "hypothetical"]}, "visible_note": {"$ref": "#/$defs/text"}},
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object", "required": ["id", "title", "kind", "origin", "uri", "read_scope"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "title": {"$ref": "#/$defs/text"},
+        "kind": {"enum": ["paper", "standard", "vendor-doc", "dataset", "user-note", "secondary", "reference-deck", "other"]},
+        "origin": {"enum": ["user", "public", "internal"]}, "uri": {"$ref": "#/$defs/text"},
+        "read_scope": {"enum": ["unread", "excerpt", "sections", "full"]},
+        "published": {"type": ["string", "null"]}, "accessed": {"type": ["string", "null"]},
+        "version": {"type": ["string", "null"]}, "parent_source_id": {"type": ["string", "null"]},
+        "trust_note": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }, "additionalProperties": false
+    },
+    "fact": {
+      "type": "object", "required": ["id", "statement", "type", "state", "source_refs", "input_fact_ids"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "statement": {"$ref": "#/$defs/text"},
+        "type": {"enum": ["observation", "derived", "interpretation", "assumption"]},
+        "state": {"enum": ["supported", "qualified", "disputed", "unverified"]},
+        "source_refs": {"type": "array", "items": {"$ref": "#/$defs/sourceRef"}},
+        "input_fact_ids": {"$ref": "#/$defs/ids"},
+        "value": {"type": ["number", "string", "array", "object", "null"]},
+        "unit": {"type": ["string", "null"]}, "scope": {"type": ["string", "object", "null"]},
+        "as_of": {"type": ["string", "null"]}, "qualification": {"type": "string"},
+        "reasoning": {"type": "string"},
+        "calculation": {"type": "object", "required": ["expression", "checked"], "properties": {"expression": {"$ref": "#/$defs/text"}, "checked": {"type": "boolean"}, "inputs": {"type": ["object", "array"]}, "units": {"type": "string"}, "rounding": {"type": "string"}, "result": {}, "record": {"type": "string"}}, "additionalProperties": false}
+      }, "additionalProperties": false
+    },
+    "asset": {
+      "type": "object", "required": ["id", "kind", "local_path", "caption", "source_refs", "fact_ids", "truth_role", "review_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["original-figure", "photo", "table-crop", "redrawn-diagram", "data-chart", "generated-concept", "other"]},
+        "local_path": {"oneOf": [{"$ref": "#/$defs/path"}, {"type": "null"}]},
+        "caption": {"$ref": "#/$defs/text"},
+        "source_refs": {"type": "array", "items": {"$ref": "#/$defs/sourceRef"}},
+        "fact_ids": {"$ref": "#/$defs/ids"},
+        "truth_role": {"enum": ["evidence", "explanation", "decorative"]},
+        "review_status": {"enum": ["pending", "reviewed", "rejected"]},
+        "transforms": {"type": "array", "items": {"type": "string"}}, "derived_from": {"$ref": "#/$defs/ids"},
+        "reading_notes": {"type": "string"}, "gap": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }, "additionalProperties": false
+    },
+    "section": {
+      "type": "object", "required": ["id", "deliverable", "heading", "body", "fact_ids", "asset_ids", "depends_on", "evidence_exceptions"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "deliverable": {"enum": ["report", "speaker-script", "author-explainer"]},
+        "heading": {"$ref": "#/$defs/text"}, "body": {"$ref": "#/$defs/text"},
+        "fact_ids": {"$ref": "#/$defs/ids"}, "asset_ids": {"$ref": "#/$defs/ids"}, "depends_on": {"$ref": "#/$defs/ids"},
+        "evidence_exceptions": {"type": "array", "items": {"$ref": "#/$defs/exception"}}
+      }, "additionalProperties": false
+    }
+  }
+}

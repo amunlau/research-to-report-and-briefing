@@ -1,13 +1,13 @@
 {
   "profile_id": "technical-research-zh",
   "profile_version": "1.0",
-  "use": "Optional starting preferences for a Chinese technical research project; explicit project choices override them.",
+  "use": "Chinese research and briefing defaults; explicit user, brand and template requirements override them. Example sizes and page layouts remain optional starting points.",
   "language": "zh-CN",
-  "headings": "declarative_subject_or_supported_finding",
+  "headings": "content_summary_question_or_supported_viewpoint_serving_overall_message",
   "voice": "human_researcher_and_presenter",
-  "images": {"principles": "prefer_directly_relevant_public_originals", "redraw": "preserve_meaning_when_original_quality_is_insufficient"},
-  "explanation": {"report_audience": "cross_domain_technical_experts", "author_baseline": "AI_beginner_with_general_technical_background", "system_view": true},
-  "presentation": {"density": "rich_relationships_with_clear_reading_path", "duration_minutes": null, "question_minutes": null, "visual_profile": null},
+  "images": {"principles": "prefer_relevant_authoritative_originals_within_allowed_material_scope", "redraw": "preserve_meaning_when_original_quality_is_insufficient"},
+  "explanation": {"report_audience": "infer_from_task_and_supplied_context", "author_baseline": "infer_from_task_and_supplied_context", "system_view": true},
+  "presentation": {"density": "readable_complete_points_and_explanatory_visuals", "cjk_font": "Microsoft YaHei", "visual_style": "restrained_blue_light_background_dark_text", "duration_minutes": null, "question_minutes": null, "visual_profile": null},
   "delivery": {"preserve_content_versions": true, "update_auxiliary_records_in_place": true},
   "conditional_preferences": {"cost_or_adaptation_emphasis": "choose_for_current_research_purpose", "author_explainer": "produce_only_when_requested"}
 }
