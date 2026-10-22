@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.parse import unquote, urlsplit
 
 sys.dont_write_bytecode = True
 SCRIPTS = Path(__file__).resolve().parents[1] / 'scripts'
@@ -127,6 +128,39 @@ class MemoryInstallEdges(unittest.TestCase):
         updated = json.loads(cfg.read_text(encoding='utf-8'))
         self.assertEqual(updated['delivery']['current_stage'], 'researching')
         self.assertEqual(updated['skill_version'], config['skill_version'])
+
+    def test_promotion_history_links_resolve_special_character_filenames(self):
+        cfg = self.init()
+        config = json.loads(cfg.read_text(encoding='utf-8'))
+        history = self.root / '已有记录'
+        history.mkdir()
+        renamed = {}
+        for index, relative in enumerate(dict.fromkeys(config['memory_documents'].values()), 1):
+            target = history / ('旧 记录(%s)#片段[注].md' % index)
+            (self.root / relative).rename(target)
+            renamed[relative] = target.relative_to(self.root).as_posix()
+        config['memory_documents'] = {key: renamed[value] for key, value in config['memory_documents'].items()}
+        cfg.write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8')
+        originals = {path: path.read_bytes() for path in history.iterdir()}
+
+        code, result = self.run_memory('update', '--memory-profile', 'full')
+        self.assertEqual(code, 0, result)
+        updated = json.loads(cfg.read_text(encoding='utf-8'))
+        resolved_sources = set()
+        for relative in set(updated['memory_documents'].values()):
+            path = self.root / relative
+            # A link destination cannot end at a filename's space or closing
+            # parenthesis, and '#' in the filename must not become an anchor.
+            first_line = path.read_text(encoding='utf-8').splitlines()[0]
+            destinations = re.findall(r'\]\(([^)\s]+)\)', first_line)
+            self.assertEqual(len(destinations), 1, first_line)
+            uri = urlsplit(destinations[0])
+            self.assertFalse(uri.fragment or uri.query or uri.scheme, destinations[0])
+            target = (path.parent / unquote(uri.path)).resolve()
+            self.assertIn(target, originals)
+            self.assertEqual(target.read_bytes(), originals[target])
+            resolved_sources.add(target)
+        self.assertEqual(resolved_sources, set(originals))
 
     def test_noop_update_does_not_accept_numeric_boolean_substitutes(self):
         cfg = self.init()

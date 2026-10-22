@@ -15,10 +15,11 @@ from pathlib import Path
 import re
 import sys
 import uuid
+from urllib.parse import quote
 
 SCHEMA = 'research-briefing/2'
 LEGACY = 'research-briefing/1'
-VERSION = '3.1.0'
+VERSION = '3.2.0'
 SEMVER = (r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
           r'(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
           r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?'
@@ -291,8 +292,12 @@ def render_documents(root, config, history=None):
             body = '# ' + config['topic'] + '｜' + item['title'] + '\n\n' + body
         if history:
             sources = list(dict.fromkeys(history[key] for key in item['keys']))
-            links = '、'.join('[' + Path(p).name + '](' + os.path.relpath(root / p, root / MEMORY).replace('\\', '/') + ')' for p in sources)
-            body = ('> 活动记录（由 compact 升级）。已有内容的历史来源：' + links + '。\n'
+            links = []
+            for source in sources:
+                label = Path(source).name.replace('\\', '\\\\').replace('[', '\\[').replace(']', '\\]')
+                relative = os.path.relpath(root / source, root / MEMORY).replace('\\', '/')
+                links.append('[' + label + '](' + quote(relative, safe='/') + ')')
+            body = ('> 活动记录（由 compact 升级）。已有内容的历史来源：' + '、'.join(links) + '。\n'
                     '> 原记录保留供读取；后续决定与新内容仅在本活动记录维护。完成正文整理后可移除此入口。\n\n' + body)
         path, _ = inside(root, MEMORY + '/' + item['filename'])
         documents[path] = body

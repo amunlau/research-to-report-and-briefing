@@ -6,6 +6,7 @@ import json
 import math
 import re
 import sys
+from fractions import Fraction
 from pathlib import Path
 
 LIMITS = [
@@ -151,26 +152,25 @@ def visible_runs(runs):
             pending.append(run["text"])
         else:
             flush()
-            result.extend(visible_text(run, rich_context=True))
+            result.extend(visible_text(run))
     flush()
     return result
 
 
-def visible_text(value, rich_context=False):
+def visible_text(value):
     if isinstance(value, str):
         return [value]
     if isinstance(value, list):
-        return [text for item in value for text in visible_text(item, rich_context)]
+        return [text for item in value for text in visible_text(item)]
     if isinstance(value, dict):
         hidden = {"fact_id", "fact_ids", "asset_id", "asset_ids", "source_id",
-                  "source_refs", "source_locators", "speaker_notes", "notes", "metadata"}
-        if rich_context or isinstance(value.get("runs"), list):
-            hidden.update({"style", "styles", "format", "formatting"})
+                  "source_refs", "source_locators", "speaker_notes", "notes", "metadata",
+                  "style", "styles", "format", "formatting"}
         result = []
         for key, item in value.items():
             if key not in hidden:
                 result.extend(visible_runs(item) if key == "runs" and isinstance(item, list)
-                              else visible_text(item, rich_context))
+                              else visible_text(item))
         return result
     return []
 
@@ -392,12 +392,15 @@ class Audit:
                                 self.add("cell_fact_coverage", place, "内容内fact_id未由块级覆盖: " + fid, True)
                         nested.extend(item.values())
                 geom = block.get("geometry")
-                # Ignore only arithmetic roundoff in pt coordinates, not visible overflow.
-                epsilon = 1e-7
-                if geom and (geom["x"] < -epsilon or geom["y"] < -epsilon or
-                             geom["x"] + geom["w"] > deck["canvas"]["width_pt"] + epsilon or
-                             geom["y"] + geom["h"] > deck["canvas"]["height_pt"] + epsilon):
-                    self.add("planned_bounds", place, "计划pt矩形超出画布；不代表像素检测", True)
+                if geom:
+                    # Keep the 1e-7 pt tolerance without overflowing large JSON integers
+                    # or losing small out-of-bounds offsets during float addition.
+                    epsilon = Fraction(1, 10_000_000)
+                    x, y, w, h = (Fraction(geom[key]) for key in ("x", "y", "w", "h"))
+                    width, height = (Fraction(deck["canvas"][key])
+                                     for key in ("width_pt", "height_pt"))
+                    if x < -epsilon or y < -epsilon or x + w > width + epsilon or y + h > height + epsilon:
+                        self.add("planned_bounds", place, "计划pt矩形超出画布；不代表像素检测", True)
                 key = "table_min_pt" if block["kind"] == "table" else "body_min_pt"
                 minimum = page["density"].get(key)
                 if minimum and block.get("font_pt", minimum) < minimum:

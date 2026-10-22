@@ -333,6 +333,58 @@ class ContentAuditEdges(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertIn('invisible_exception', self.codes(result))
 
+    def test_nested_container_styles_do_not_supply_visible_qualification(self):
+        note = '本数据仅用于测试。'
+        for field in ('style', 'styles', 'format', 'formatting'):
+            cases = [
+                {'paragraphs': [{'runs': [{'text': '计数为2。'}]}], field: {'label': note}},
+                {'runs': [{'text': '计数为2。'}],
+                 'paragraphs': [{'text': '其他正文', field: {'label': note}}]},
+                {'cells': [{'nodes': [{'text': '计数为2。', field: {'label': note}}]}]},
+            ]
+            for content in cases:
+                with self.subTest(field=field, content=content):
+                    ledger, deck = self.qualified_page(content)
+                    code, result = self.audit(ledger, deck)
+                    self.assertEqual(code, 1)
+                    self.assertIn('invisible_exception', self.codes(result))
+                    # A real sibling caption still supplies visible text.
+                    content['caption'] = note
+                    self.assertEqual(self.audit(ledger, deck)[0], 0)
+
+    def test_large_geometry_keeps_bounds_checks_structured_and_exact(self):
+        huge = 10 ** 309
+        cases = [
+            (huge, 0, 1, False),
+            (huge, huge - 1, 1, False),
+            (huge, huge, 1, True),
+            (huge, 1e308, 1e308, False),
+            (1.5e308, 1e308, 1e308, True),
+        ]
+        for axis, extent, canvas_key in (('x', 'w', 'width_pt'), ('y', 'h', 'height_pt')):
+            for size, position, length, outside in cases:
+                with self.subTest(axis=axis, size=size, position=position, length=length):
+                    ledger, deck = self.ledger(), self.deck()
+                    deck['canvas'][canvas_key] = size
+                    geom = {'x': 0, 'y': 0, 'w': 1, 'h': 1, 'unit': 'pt'}
+                    geom.update({axis: position, extent: length})
+                    deck['pages'][0]['blocks'][0]['geometry'] = geom
+                    code, result = self.audit(ledger, deck)
+                    self.assertEqual(code, 1 if outside else 0)
+                    self.assertEqual('planned_bounds' in self.codes(result), outside)
+
+    def test_geometry_tolerance_allows_roundoff_but_detects_real_overflow(self):
+        for x, width, outside in ((0.1, 0.2, False), (-5e-8, 0.3, False),
+                                  (-2e-7, 0.3, True), (0.1, 0.2000002, True)):
+            with self.subTest(x=x, width=width):
+                ledger, deck = self.ledger(), self.deck()
+                deck['canvas']['width_pt'] = 0.3
+                deck['pages'][0]['blocks'][0]['geometry'] = {
+                    'x': x, 'y': 0, 'w': width, 'h': 1, 'unit': 'pt'}
+                code, result = self.audit(ledger, deck)
+                self.assertEqual(code, 1 if outside else 0)
+                self.assertEqual('planned_bounds' in self.codes(result), outside)
+
     def test_explicit_newline_in_a_text_run_is_preserved(self):
         for newline in ('\n', '\r\n', '\v'):
             with self.subTest(newline=newline):

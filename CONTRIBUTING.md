@@ -37,6 +37,8 @@
 
 变更摘要维护在 [CHANGELOG](CHANGELOG.md)，项目迁移细节见[版本与项目升级](references/release-history.md)。同版本内容通过 Git 提交区分；版本号调整、标签与正式发布由维护者决定。
 
+升级源码版本时同步`SKILL.md`的`metadata.version`、`scripts/project_memory.py`的`VERSION`、README及宿主安装页。按实际变更维护Schema和可选示例自己的版本，不全局替换历史验证记录、旧项目的`skill_version`或上游引擎版本。新版本未发布时标为待发布，不能提前声称标签或Release已存在。
+
 本仓库采用 [CC BY-NC 4.0](LICENSE)：非商业使用须署名并保留许可声明；分发或二次开发对外提供时须注明来源仓库；商用需另行授权。引入外部代码、模板或素材前核对其复用条件与归属要求；引用链接本身不授予复制或分发权。方法参考保留可访问出处，不能暗示第三方项目对本仓库提供了兼容或质量认证。
 
 ## 提交前复核
