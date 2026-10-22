@@ -6,7 +6,7 @@
   "required": ["schema_version", "topic", "sources", "facts", "assets", "sections"],
   "properties": {
     "schema_version": {"const": "research-briefing-content/1"},
-    "topic": {"type": "string", "minLength": 1},
+    "topic": {"type": "string", "minLength": 1, "pattern": "\\S"},
     "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
     "facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
     "assets": {"type": "array", "items": {"$ref": "#/$defs/asset"}},
@@ -15,10 +15,10 @@
   },
   "additionalProperties": false,
   "$defs": {
-    "id": {"type": "string", "minLength": 1},
+    "id": {"type": "string", "minLength": 1, "pattern": "\\S"},
     "ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
-    "text": {"type": "string", "minLength": 1},
-    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/|[A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000-\\u001f\\u007f]+$"},
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!\\s*$)(?!/|[A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000-\\u001f\\u007f]+(?![\\s\\S])"},
     "sourceRef": {
       "type": "object", "required": ["source_id", "locator", "support", "relation"],
       "properties": {
@@ -41,7 +41,7 @@
         "read_scope": {"enum": ["unread", "excerpt", "sections", "full"]},
         "published": {"type": ["string", "null"]}, "accessed": {"type": ["string", "null"]},
         "version": {"type": ["string", "null"]}, "parent_source_id": {"type": ["string", "null"]},
-        "trust_note": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "trust_note": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}(?![\\s\\S])"}
       }, "additionalProperties": false
     },
     "fact": {
@@ -72,7 +72,7 @@
         "review_status": {"enum": ["pending", "reviewed", "rejected"]},
         "transforms": {"type": "array", "items": {"type": "string"}}, "derived_from": {"$ref": "#/$defs/ids"},
         "reading_notes": {"type": "string"}, "gap": {"type": "string"},
-        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}(?![\\s\\S])"}
       }, "additionalProperties": false
     },
     "section": {

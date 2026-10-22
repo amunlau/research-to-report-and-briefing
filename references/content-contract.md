@@ -79,6 +79,12 @@ calculation：表达式、输入、单位、舍入和结果检查记录（需要
 
 图形块的`content`可保存节点、真实关系、分组及完整说明，沿用块级事实和素材关联；小任务继续用等价内容卡。构图选择、文字容量、图文对应、有效图像范围和布局调整可按[排版测量](layout-engineering.md)记于`deck.extensions.layout_records`，关联页/块ID及素材ID，需要时补实际字体与可用区域。不要在受约束的page对象上另加未经schema支持的字段；这些可选记录由制作适配使用，不使助手自动具备排版、字体测量或审美判断能力。渲染与内容保真结果保存于验收回执，避免把期望值当成实际结果写回计划。
 
+### 来源关联与页面展示分离
+
+PPT默认隐藏页内书目展示，见[来源展示](visual-expression.md#ppt来源展示默认)。`source_locators`是块级追溯元数据，不意味着必须打印到页面；原F/S/A关系继续保留。`kind=source`仅在本次确需可见来源时生成，不自动为每页新增来源块。修订旧计划时先保全其来源关联，再同步移除不再显示的来源块、相应`reading_path`项和对象映射，避免悬空引用；稳定的事实与素材ID不改。
+
+`speaker_notes`只保存完整口语稿。导出时按页块关联汇总机构/作者、标题、日期、URL或本地定位、图号/页码等真实信息，在同页备注另建“资料来源（不朗读）”分区，不覆盖口语稿，也不把文献串当作非空备注通过。无需新增page字段；展示选择保存在项目已有视觉配置，来源继续从账本派生。验收分别比对口语正文和资料分区；备注关闭时保留证据台账，不擅自恢复备注或新建未请求成果。隐藏来源不改变下方`visible_note`的可见要求。
+
 ## 未定结论的可见处理
 
 最终使用`qualified/disputed/unverified`事实或假设时，对应页面/章节保存`evidence_exceptions`项：`fact_id/treatment/visible_note`。`treatment`为`qualified/disputed/hypothetical`：前两项分别对应qualified/disputed，assumption使用hypothetical；unverified只能用qualified明确待核并缩小判断，或转为明确的hypothetical情景。`visible_note`是实际可见的限定文字，必须出现在该页内容或该章节正文中；只放备注不够支撑读者独立判断。不使用的缺口无需制造一页“待核”。
@@ -99,7 +105,9 @@ calculation：表达式、输入、单位、舍入和结果检查记录（需要
 
 `engine_map`按页保存`page_id/backend/backend_version/output_path/slide_number/object_ids`。`object_ids`映射B ID到制作引擎的实际对象ID或名称；未得到可靠对象ID时为空，不制造映射。可选`route/reading_mode`记录实际引擎路线和模式，`fact_id_map/source_id_map/asset_path_map`分别保留原F/S/A到引擎编号或资源路径的映射；它们不改变上游ID。`actual_objects`按block_id记录实际`kind/detail`及必要的deviation；实际kind可为native-text/native-shape/native-table/native-chart/native-formula/raster-image/vector-image/mixed/unknown，反映检查事实。
 
-`output_path`及`asset_path_map`的值使用项目相对路径和`/`分隔，不含盘符、反斜杠或父级跳转；未建立的事实/来源映射项省略，不用空字符串占位。
+`output_path`及`asset_path_map`的值使用项目相对路径和`/`分隔，不含盘符、反斜杠、父级跳转或控制字符；未建立的事实/来源映射项省略，不用空字符串占位。
+
+最终映射按每个输出文件单独核对：已映射页的相对顺序应与`deck.pages`一致，映射行本身无须排序，也不强制页码从1连续起排。部分导出和不同输出文件分别处理。助手会提示部分内容块缺少对象映射、同一计划页在同一文件重复映射及声明页序颠倒；有意重排、拆分或重复展示时同步计划/变更记录，缺少可靠对象ID时继续逐块人工对照，不为消除提示编造映射。多个内容块可对应同一实际对象。这些提示不证明内容已经丢失，也不代替打开成品核对。
 
 源计划只是引用链中间环节；要声称“最终每个数字可追溯”，还须对照最终PPT文字、表格、图像及对应源文件，核实没有导出丢失或二次改写。实际渲染与编辑检查没有执行时，留待检查，不能先填actual_objects为期望值。
 
@@ -108,6 +116,8 @@ calculation：表达式、输入、单位、舍入和结果检查记录（需要
 更正F、A或S后，沿sections/pages/blocks列出影响位置，标记待同步；调整版式不会自动推翻无关研究。引擎重编号只改映射和实际页码。最终文件哈希、渲染输入和实际查看范围见[质量与版本](quality-and-versioning.md)。
 
 ## 只读助手
+
+必需文字与ID的非空白约束由Schema中的显式`pattern`表达；`minLength`按原字符串字符数检查，不隐式去除空白或改写ID。可空草稿字段仍按各自定义处理，备注的最终完整性要求另行检查。路径禁止控制字符，避免计划记录通过后才在文件生成时失败。
 
 ```text
 python <skill-dir>/scripts/audit_content.py --root <project-dir> --ledger .research-briefing/content.json --deck .research-briefing/deck.json --stage draft

@@ -15,7 +15,7 @@ LIMITS = [
     "备注仅检查启用时是否非空，不判断口语稿完整性、自然程度或讲述时长。",
     "本地文件存在性及已记录素材sha256仅在--check-files启用时检查；不为缺失指纹补值。",
     "几何检查仅比较计划中的pt矩形，不检测真实文字、像素溢出或图内标签。",
-    "引擎映射仅查结构与引用，不证明最终文件的视觉或原生编辑性通过。",
+    "引擎映射仅查结构、引用及声明的覆盖/页序；不读取成品对象，不证明视觉或原生编辑性通过。",
 ]
 
 
@@ -120,7 +120,7 @@ def schema_errors(value, schema, document, location):
                 errors.extend(schema_errors(item, schema["items"], document,
                                             f"{location}[{index}]"))
     elif isinstance(value, str):
-        if len(value.strip()) < schema.get("minLength", 0):
+        if len(value) < schema.get("minLength", 0):
             errors.append((location, "字符串为空或过短"))
         if "pattern" in schema and not re.search(schema["pattern"], value):
             errors.append((location, "字符串不符合规定格式"))
@@ -411,6 +411,8 @@ class Audit:
         if not rows and self.final:
             self.add("missing_engine_map", "engine_map", "最终计划没有制作映射；不证明编辑性通过")
         mapped, slots = set(), set()
+        page_order = {pid: order for order, pid in enumerate(pages)}
+        output_pages = {}
         for i, row in enumerate(rows):
             loc = f"engine_map[{i}]"
             self.refs([row["page_id"]], pages, loc)
@@ -426,6 +428,14 @@ class Audit:
                 self.refs(row["object_ids"], blocks, loc + ".object_ids")
                 self.refs([obj["block_id"] for obj in row.get("actual_objects", [])],
                           blocks, loc + ".actual_objects")
+                if self.final:
+                    output_pages.setdefault(slot[0], []).append(
+                        (row["slide_number"], row["page_id"], loc))
+                    if any(row["object_ids"].values()):
+                        missing = [bid for bid in blocks if not row["object_ids"].get(bid)]
+                        if missing:
+                            self.add("unmapped_block", loc + ".object_ids",
+                                     "部分内容块无可靠对象映射，需逐块对照成品: " + ", ".join(missing))
             for field, index in (("fact_id_map", self.facts), ("source_id_map", self.sources),
                                  ("asset_path_map", self.assets)):
                 self.refs(row.get(field, {}), index, loc + "." + field)
@@ -436,6 +446,20 @@ class Audit:
         if rows and self.final:
             for pid in pages.keys() - mapped:
                 self.add("unmapped_page", "engine_map", "页面无制作映射: " + pid)
+            for output, entries in output_pages.items():
+                seen = set()
+                ordered = []
+                for slide, pid, loc in sorted(entries, key=lambda entry: entry[0]):
+                    if pid in seen:
+                        self.add("repeated_page_mapping", loc,
+                                 "同一计划页在同一输出文件重复映射，需核对重复/拆页去向: " + pid)
+                    seen.add(pid)
+                    ordered.append(pid)
+                positions = [page_order[pid] for pid in ordered]
+                if positions != sorted(positions):
+                    self.add("page_order_mismatch", "engine_map",
+                             "声明的输出页序与deck.pages不同，需同步计划或记录有意重排: "
+                             + str(output) + " → " + ", ".join(ordered))
 
     def run(self, ledger, deck, ledger_path):
         self.sources = self.index(ledger["sources"], "sources")

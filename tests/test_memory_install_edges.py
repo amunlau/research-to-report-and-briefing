@@ -6,6 +6,7 @@ from io import StringIO
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -169,6 +170,54 @@ class MemoryInstallEdges(unittest.TestCase):
         self.assertEqual(installer.inventory(source), before)
         self.assertEqual(unrelated.read_text(encoding='utf-8'), 'user data')
         self.assertEqual([path.name for path in parent.iterdir()], ['keep.txt'])
+
+    def test_planned_output_rejects_control_characters_without_changing_config(self):
+        cfg = self.init()
+        expected_path = self.root / 'expected.json'
+        original = cfg.read_bytes()
+        schema = json.loads((SCRIPTS.parent / 'assets/project.schema.json').read_text(encoding='utf-8'))
+        path_pattern = schema['$defs']['path']['pattern']
+        for bad_path in ('report.md\n', 'report.md\r\n'):
+            self.assertIsNone(re.search(path_pattern, bad_path))
+        for control in ('\x00', '\n', '\r', '\t', '\x7f'):
+            with self.subTest(control=repr(control)):
+                expected = [{'kind': 'report', 'path': 'planned/bad' + control + 'name.md',
+                             'version': '1', 'required': True}]
+                self.assertIsNone(re.search(path_pattern, expected[0]['path']))
+                expected_path.write_text(json.dumps(expected), encoding='utf-8')
+                code, result = self.run_memory('update', '--expected-artifacts', expected_path.name)
+                self.assertEqual(code, 2)
+                self.assertIn('control character', result['message'])
+                self.assertEqual(cfg.read_bytes(), original)
+        expected[0]['path'] = '计划成果/技术 报告.md'
+        self.assertIsNotNone(re.search(path_pattern, expected[0]['path']))
+        expected_path.write_text(json.dumps(expected), encoding='utf-8')
+        self.assertEqual(self.run_memory('update', '--expected-artifacts', expected_path.name)[0], 0)
+
+    def test_installation_reports_both_copy_and_cleanup_failures(self):
+        source = self.root / installer.NAME
+        source.mkdir()
+        (source / 'file.txt').write_text('fixture', encoding='utf-8')
+        before = installer.inventory(source)
+        parent = self.root / 'skills'
+        parent.mkdir()
+        unrelated = parent / 'keep.txt'
+        unrelated.write_text('user data', encoding='utf-8')
+        output = StringIO()
+        with patch.object(installer, 'SOURCE', source), patch.object(
+                installer, 'package_check', return_value=(before, [])), patch.object(
+                installer.shutil, 'copy2', side_effect=OSError('simulated copy failure')), patch.object(
+                installer.shutil, 'rmtree', side_effect=PermissionError('simulated cleanup failure')):
+            with redirect_stdout(output):
+                code = installer.main(['install', '--skills-dir', str(parent)])
+        self.assertEqual(code, 2)
+        result = json.loads(output.getvalue())
+        self.assertIn('simulated copy failure', result['message'])
+        self.assertIn('simulated cleanup failure', result['message'])
+        self.assertIn('.rb-install-', result['message'])
+        self.assertFalse((parent / installer.NAME).exists())
+        self.assertEqual(installer.inventory(source), before)
+        self.assertEqual(unrelated.read_text(encoding='utf-8'), 'user data')
 
     def test_installation_detects_source_changes_before_publishing(self):
         source = self.root / installer.NAME

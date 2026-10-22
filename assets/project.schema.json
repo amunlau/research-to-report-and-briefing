@@ -24,7 +24,7 @@
     },
     "skill_version": {
       "type": "string",
-      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?![\\s\\S])",
       "description": "Skill version that created or migrated the configuration. Schema compatibility follows schema_version, not this provenance value."
     },
     "topic": {
@@ -334,8 +334,8 @@
     "path": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^(?!/|[A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
-      "description": "Normalized project-relative file path using /; runtime checks root containment, canonical spelling, file type and existence policy."
+      "pattern": "^(?!\\s*$)(?!/|[A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000-\\u001f\\u007f]+(?![\\s\\S])",
+      "description": "Non-blank project-relative file path using /, without control characters; runtime checks root containment, canonical spelling, file type and existence policy."
     },
     "memory": {
       "type": "object",

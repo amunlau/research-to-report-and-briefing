@@ -18,7 +18,7 @@ import uuid
 
 SCHEMA = 'research-briefing/2'
 LEGACY = 'research-briefing/1'
-VERSION = '3.0.0'
+VERSION = '3.1.0'
 SEMVER = (r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
           r'(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
           r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?'
@@ -71,7 +71,7 @@ def write_new(path, payload):
 
 def inside(root, value, relative=False):
     require(isinstance(value, str) and bool(value.strip()), 'Path must be a non-empty string.')
-    require('\x00' not in value, 'Path cannot contain a null character.')
+    require(not re.search(r'[\x00-\x1f\x7f]', value), 'Path cannot contain a control character (including null).')
     raw = Path(value)
     require(not relative or not raw.is_absolute(), 'Configuration paths must be project-relative: ' + value)
     try:

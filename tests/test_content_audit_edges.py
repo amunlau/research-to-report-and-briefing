@@ -209,6 +209,81 @@ class ContentAuditEdges(unittest.TestCase):
             {'fact_id': 'F1', 'treatment': 'qualified', 'visible_note': '本数据仅用于测试。'}]
         return ledger, deck
 
+    def mapping(self, page='P1', slide=1, output='deck.pptx'):
+        return {'page_id': page, 'backend': 'test-fixture', 'backend_version': None,
+                'output_path': output, 'slide_number': slide,
+                'object_ids': {'B1': ['shape-1']}}
+
+    def test_partial_object_mapping_identifies_unmapped_blocks(self):
+        ledger, deck = self.ledger(), self.deck()
+        page = deck['pages'][0]
+        block = deepcopy(page['blocks'][0])
+        block['id'] = 'B2'
+        page['blocks'].append(block)
+        page['reading_path'].append('B2')
+        row = self.mapping()
+        deck['engine_map'] = [row]
+        for mapping in ({'B1': ['shape-1']}, {'B1': ['shape-1'], 'B2': []}):
+            with self.subTest(mapping=mapping):
+                row['object_ids'] = mapping
+                code, result = self.audit(ledger, deck, check_files=False)
+                self.assertEqual(code, 0)
+                findings = [x for x in result['warnings'] if x['code'] == 'unmapped_block']
+                self.assertEqual(len(findings), 1)
+                self.assertIn('B2', findings[0]['message'])
+        # One output object may deliberately combine several content blocks.
+        row['object_ids'] = {'B1': ['shape-1'], 'B2': ['shape-1']}
+        self.assertNotIn('unmapped_block', self.codes(
+            self.audit(ledger, deck, check_files=False)[1], 'warnings'))
+
+    def test_incomplete_draft_mapping_remains_allowed(self):
+        ledger, deck = self.ledger(), self.deck()
+        second = deepcopy(deck['pages'][0]['blocks'][0])
+        second['id'] = 'B2'
+        deck['pages'][0]['blocks'].append(second)
+        deck['engine_map'] = [self.mapping()]
+        code, result = self.audit(ledger, deck, stage='draft', check_files=False)
+        self.assertEqual(code, 0)
+        self.assertNotIn('unmapped_block', self.codes(result, 'warnings'))
+
+    def test_output_order_is_compared_to_plan_not_mapping_row_order(self):
+        ledger, deck = self.ledger(), self.deck()
+        second = deepcopy(deck['pages'][0])
+        second['id'] = 'P2'
+        deck['pages'].append(second)
+        deck['engine_map'] = [self.mapping('P2', 1), self.mapping('P1', 2)]
+        code, result = self.audit(ledger, deck, check_files=False)
+        self.assertEqual(code, 0)
+        self.assertIn('page_order_mismatch', self.codes(result, 'warnings'))
+        # The mapping rows themselves need not be sorted.
+        deck['engine_map'] = [self.mapping('P2', 2), self.mapping('P1', 1)]
+        self.assertNotIn('page_order_mismatch', self.codes(
+            self.audit(ledger, deck, check_files=False)[1], 'warnings'))
+
+    def test_order_check_keeps_separate_outputs_and_subset_exports_independent(self):
+        ledger, deck = self.ledger(), self.deck()
+        for pid in ('P2', 'P3'):
+            page = deepcopy(deck['pages'][0])
+            page['id'] = pid
+            deck['pages'].append(page)
+        deck['engine_map'] = [self.mapping('P3', 9, 'main.pptx'),
+                              self.mapping('P2', 1, 'other.pptx'),
+                              self.mapping('P1', 7, 'main.pptx')]
+        code, result = self.audit(ledger, deck, check_files=False)
+        self.assertEqual(code, 0)
+        self.assertNotIn('page_order_mismatch', self.codes(result, 'warnings'))
+        self.assertNotIn('repeated_page_mapping', self.codes(result, 'warnings'))
+
+    def test_same_page_mapped_twice_in_one_output_is_explicitly_flagged(self):
+        ledger, deck = self.ledger(), self.deck()
+        deck['engine_map'] = [self.mapping('P1', 1), self.mapping('P1', 2)]
+        code, result = self.audit(ledger, deck, check_files=False)
+        self.assertEqual(code, 0)
+        self.assertIn('repeated_page_mapping', self.codes(result, 'warnings'))
+        deck['engine_map'][1]['output_path'] = 'other.pptx'
+        self.assertNotIn('repeated_page_mapping', self.codes(
+            self.audit(ledger, deck, check_files=False)[1], 'warnings'))
+
     def test_visible_qualifier_can_span_adjacent_styled_text_runs(self):
         ledger, deck = self.qualified_page({'runs': [
             {'text': '本数据', 'bold': True},

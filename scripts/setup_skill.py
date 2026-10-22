@@ -239,7 +239,7 @@ def check(args):
             "network_and_search": "not_verified; supplied by the host and its configured tools",
             "ppt_generation": "not_verified; use a separately available PPT engine such as ppt-master",
             "pptx_rendering": "not_verified; a PATH candidate does not prove successful rendering",
-            "fonts": "not_verified; confirm Microsoft YaHei or document an available substitute"},
+            "fonts": "not_verified; confirm Microsoft YaHei for PPT, SimSun and Times New Roman for reports, or document actual substitutes"},
         "limitations": ["This checks this package, not the complete Agent Skills specification.",
                         "No host, engine, renderer, Office process, or downloaded script was launched."]
     }, (0 if not problems else 1)
@@ -294,11 +294,24 @@ def install(args):
         stage.rename(target)
     finally:
         # stage is the exact unique child created above, never a user-supplied path.
-        if os.path.lexists(str(stage)):
-            if (linked(stage) or stage.resolve() != stage_resolved or
-                    stage_resolved.parent != parent or not stage.name.startswith(".rb-install-")):
-                raise ValueError("Staging path changed; automatic cleanup was skipped: " + str(stage))
-            shutil.rmtree(stage_resolved)
+        install_error = sys.exc_info()[1]
+        try:
+            if os.path.lexists(str(stage)):
+                if (linked(stage) or stage.resolve() != stage_resolved or
+                        stage_resolved.parent != parent or not stage.name.startswith(".rb-install-")):
+                    raise ValueError("Staging path changed; automatic cleanup was skipped: " + str(stage))
+                shutil.rmtree(stage_resolved)
+        except (OSError, ValueError, shutil.Error) as cleanup_error:
+            if isinstance(install_error, Exception):
+                raise ValueError("Installation failed: " + str(install_error) +
+                                 "; staging cleanup also failed: " + str(cleanup_error) +
+                                 "; inspect staging path: " + str(stage)) from install_error
+            if install_error is not None:
+                # Preserve cancellation/SystemExit while still reporting cleanup failure.
+                print("Staging cleanup failed at " + str(stage) + ": " + str(cleanup_error),
+                      file=sys.stderr)
+                raise install_error from cleanup_error
+            raise
     return {"command": "install", "status": "installed", "path": str(target),
             "files_copied": len(manifest["files"]),
             "next_step": "Refresh the host's skill discovery; dependencies and host loading remain unverified."}, 0

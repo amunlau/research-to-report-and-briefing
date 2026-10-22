@@ -31,6 +31,53 @@ inspector = module('inspect_pptx')
 installer = module('setup_skill')
 
 
+class SchemaStringBehavior(unittest.TestCase):
+    def test_minimum_length_counts_all_string_characters(self):
+        schema = {'type': 'string', 'minLength': 3}
+        for value in (' a ', '   ', '中文 '):
+            with self.subTest(value=value):
+                self.assertEqual(audit_helper.schema_errors(value, schema, schema, 'text'), [])
+        self.assertTrue(audit_helper.schema_errors('ab', schema, schema, 'text'))
+
+    def test_required_text_explicitly_rejects_blank_values_in_bundled_schemas(self):
+        import re
+        for name in ('content-ledger.schema.json', 'deck-plan.schema.json'):
+            document = json.loads((ROOT / 'assets' / name).read_text(encoding='utf-8'))
+
+            def check(node):
+                if isinstance(node, dict):
+                    if node.get('minLength', 0) > 0:
+                        # The published schema must reject blanks on its own,
+                        # without relying on a helper's implicit stripping.
+                        for blank in (' ', '\t\n', '\u3000'):
+                            self.assertIsNone(re.search(node.get('pattern', ''), blank), (name, node))
+                            self.assertTrue(audit_helper.schema_errors(blank, node, document, 'text'))
+                    for child in node.values():
+                        check(child)
+                elif isinstance(node, list):
+                    for child in node:
+                        check(child)
+
+            check(document)
+            self.assertEqual(audit_helper.schema_errors(' F1 ', document['$defs']['id'], document, 'id'), [])
+            for path in ('report.md\n', 'report.md\r\n', 'bad\tname.md', 'report.md\x7f'):
+                self.assertTrue(audit_helper.schema_errors(path, document['$defs']['path'], document, 'path'))
+            self.assertEqual(audit_helper.schema_errors(
+                '计划成果/技术 报告.md', document['$defs']['path'], document, 'path'), [])
+
+    def test_fixed_format_fields_reject_trailing_newlines(self):
+        content = json.loads((ROOT / 'assets/content-ledger.schema.json').read_text(encoding='utf-8'))
+        project = json.loads((ROOT / 'assets/project.schema.json').read_text(encoding='utf-8'))
+        cases = [(content['$defs'][kind]['properties']['sha256'], 'a' * 64)
+                 for kind in ('source', 'asset')]
+        cases.append((project['properties']['skill_version'], '3.0.0'))
+        for schema, valid in cases:
+            self.assertEqual(audit_helper.schema_errors(valid, schema, schema, 'value'), [])
+            for suffix in ('\n', '\r', '\r\n'):
+                with self.subTest(valid=valid, suffix=repr(suffix)):
+                    self.assertTrue(audit_helper.schema_errors(valid + suffix, schema, schema, 'value'))
+
+
 class Workspace(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='research-runtime-')
