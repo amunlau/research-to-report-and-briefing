@@ -409,6 +409,42 @@ class ContentAuditEdges(unittest.TestCase):
                 ledger, deck = self.qualified_page(content)
                 self.assertEqual(self.audit(ledger, deck)[0], 0)
 
+    def test_text_runs_keep_independent_caption_and_paragraphs(self):
+        note = '本数据仅用于测试。'
+        for field, body in (('caption', note), ('paragraphs', [{'text': note}])):
+            with self.subTest(field=field):
+                ledger, deck = self.qualified_page({'runs': [
+                    {'text': '计数为2。', field: body}]})
+                code, result = self.audit(ledger, deck)
+                self.assertEqual(code, 0, result)
+        # Independent body fragments must not break adjacent text-run coverage.
+        ledger, deck = self.qualified_page({'runs': [
+            {'text': '本数据', 'caption': '独立图注'}, {'text': '仅用于测试。'}]})
+        self.assertEqual(self.audit(ledger, deck)[0], 0)
+
+    def test_text_run_body_fragments_do_not_join_or_expose_formatting(self):
+        note = '本数据仅用于测试。'
+        cases = [
+            {'runs': [{'text': '本数据', 'caption': '仅用于测试。'}]},
+            {'runs': [{'text': '其他正文', 'caption': '本数据',
+                       'paragraphs': [{'text': '仅用于测试。'}]}]},
+            {'runs': [{'text': '其他正文', 'paragraphs': [
+                {'text': '本数据'}, {'text': '仅用于测试。'}]}]},
+        ]
+        for field in ('style', 'styles', 'format', 'formatting', 'metadata',
+                      'notes', 'speaker_notes', 'font', 'font_family', 'color'):
+            cases.append({'runs': [{'text': '其他正文', field: note}]})
+            if field in ('style', 'styles', 'format', 'formatting', 'metadata',
+                         'notes', 'speaker_notes'):
+                cases.append({'runs': [{'text': '其他正文', 'paragraphs': [
+                    {'text': '图注正文', field: {'label': note}}]}]})
+        for content in cases:
+            with self.subTest(content=content):
+                ledger, deck = self.qualified_page(content)
+                code, result = self.audit(ledger, deck)
+                self.assertEqual(code, 1, result)
+                self.assertIn('invisible_exception', self.codes(result))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

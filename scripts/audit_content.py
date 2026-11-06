@@ -150,6 +150,10 @@ def visible_runs(runs):
         elif isinstance(run, dict) and isinstance(run.get("text"), str):
             # Preserve newlines literally; ignore the run's formatting fields.
             pending.append(run["text"])
+            # Read the supported body siblings independently, without exposing
+            # arbitrary run attributes (font names, colors, etc.) as body text.
+            result.extend(visible_text({key: run[key] for key in ("caption", "paragraphs")
+                                        if key in run}))
         else:
             flush()
             result.extend(visible_text(run))

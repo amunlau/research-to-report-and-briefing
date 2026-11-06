@@ -19,7 +19,7 @@ from urllib.parse import quote
 
 SCHEMA = 'research-briefing/2'
 LEGACY = 'research-briefing/1'
-VERSION = '3.2.0'
+VERSION = '3.3.0'
 SEMVER = (r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
           r'(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
           r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?'
