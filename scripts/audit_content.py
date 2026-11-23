@@ -9,6 +9,7 @@ import sys
 from fractions import Fraction
 from pathlib import Path
 
+MAX_JSON_DEPTH = 128
 LIMITS = [
     "仅实现随包Schema使用的结构子集，不是完整JSON Schema验证器。",
     "不核实原文是否支持结论，不执行计算表达式，不检查事实真实性。",
@@ -44,11 +45,31 @@ def unique_object(pairs):
     return result
 
 
+def validate_json_tree(value):
+    """Bound nesting and reject Unicode that cannot be written as UTF-8."""
+    pending = [(value, 0)]
+    while pending:
+        current, depth = pending.pop()
+        if isinstance(current, str):
+            if any(0xD800 <= ord(char) <= 0xDFFF for char in current):
+                raise InputError("JSON包含未配对的Unicode代理项")
+        elif isinstance(current, (dict, list)):
+            depth += 1
+            if depth > MAX_JSON_DEPTH:
+                raise InputError("JSON容器嵌套超过128层")
+            if isinstance(current, dict):
+                pending.extend((key, depth) for key in current)
+                pending.extend((item, depth) for item in current.values())
+            else:
+                pending.extend((item, depth) for item in current)
+
+
 def read_json(path):
     try:
         raw = path.read_bytes()
         data = json.loads(raw.decode("utf-8-sig"), object_pairs_hook=unique_object,
                           parse_constant=reject_constant, parse_float=finite_float)
+        validate_json_tree(data)
         return data, hashlib.sha256(raw).hexdigest()
     except (InputError, OSError, UnicodeError, ValueError, RecursionError) as exc:
         raise InputError(f"无法读取JSON {path}: {exc}") from None
@@ -508,7 +529,7 @@ def main():
     hashes = {}
     try:
         if hasattr(sys.stdout, "reconfigure"):
-            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
         parser = Parser(description=__doc__)
         parser.add_argument("--root", required=True)
         parser.add_argument("--ledger", required=True)

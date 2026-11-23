@@ -1,6 +1,6 @@
 # 在 Claude Code 中安装与使用
 
-适用于本仓库 **3.3.0**。功能、依赖和共同安装约定以 [README](../README.md) 为主；字体、路径、引擎和渲染差异见[环境适配](../references/portability.md)。
+当前版本：**v4.0.0**。功能、依赖和共同安装约定以 [README](../README.md) 为主；字体、路径、引擎和渲染差异见[环境适配](../references/portability.md)。
 
 ## 1. 准备源码与宿主
 
@@ -13,7 +13,7 @@ git clone https://github.com/amunlau/research-to-report-and-briefing.git researc
 cd research-to-report-and-briefing
 ```
 
-也可从[仓库页面](https://github.com/amunlau/research-to-report-and-briefing)下载 ZIP。将直接包含 `SKILL.md` 的解压目录改名为 `research-to-report-and-briefing`，去掉 `-main` 等后缀，再进入该目录。使用前查看 `SKILL.md` 的 `metadata.version`，确认拿到所需版本。
+也可从[仓库页面](https://github.com/amunlau/research-to-report-and-briefing)下载 ZIP。将直接包含 `SKILL.md` 的解压目录改名为 `research-to-report-and-briefing`，去掉 `-main` 等后缀，再进入该目录。使用前核对`SKILL.md`的`metadata.version`及来源提交；当前v4.0.0的包内标识为`4.0.0`。同版本存在本地修改时，继续按实际文件内容确认安装范围。
 
 研究项目、生成文件和虚拟环境均放在源码仓库之外。安装前使用干净源码，避免夹带个人配置、凭据、缓存或临时资料；Git 的忽略规则不代表所有被忽略文件都会自动从安装中排除。
 

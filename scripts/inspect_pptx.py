@@ -8,13 +8,16 @@ Exit codes: 0 inventory generated, 1 structural errors found, 2 invalid input/ou
 import argparse
 import hashlib
 import json
+import os
 import posixpath
+import stat
 import sys
 import zipfile
 import zlib
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree as ET
+from xml.parsers import expat
 
 MAX_XML_BYTES = 16 * 1024 * 1024
 MAX_TOTAL_XML_BYTES = 128 * 1024 * 1024
@@ -75,6 +78,11 @@ def paragraphs(node):
         result.append("".join(pieces))
     return result
 
+
+def reject_xml_declaration(*args):
+    raise ValueError("DOCTYPE and ENTITY declarations are rejected.")
+
+
 class Package:
     def __init__(self, archive):
         self.archive, self.errors, self.warnings, self.used = archive, [], [], 0
@@ -104,12 +112,17 @@ class Package:
             self.used += len(data)
             if len(data) > MAX_XML_BYTES or self.used > MAX_TOTAL_XML_BYTES:
                 raise ValueError("XML read budget exceeded.")
-            probe = data.replace(b"\x00", b"").upper()
-            if b"<!DOCTYPE" in probe or b"<!ENTITY" in probe:
-                raise ValueError("DOCTYPE and ENTITY declarations are rejected.")
+            # Parse declarations before constructing a tree or expanding entities.
+            # Expat handles XML encodings and ignores declaration-like text in
+            # CDATA, comments and processing instructions.
+            guard = expat.ParserCreate()
+            guard.StartDoctypeDeclHandler = reject_xml_declaration
+            guard.EntityDeclHandler = reject_xml_declaration
+            guard.ExternalEntityRefHandler = reject_xml_declaration
+            guard.Parse(data, True)
             return ET.fromstring(data)
         except (OSError, EOFError, ValueError, LookupError, RuntimeError, NotImplementedError, zlib.error,
-                zipfile.BadZipFile, ET.ParseError) as exc:
+                zipfile.BadZipFile, ET.ParseError, expat.ExpatError) as exc:
             self.error("unreadable_xml", part, str(exc))
             return None
 
@@ -380,6 +393,50 @@ def inspect(path, include_text=False):
         return report, 1 if pkg.errors else 0
 
 
+def owns_output(path, identity):
+    """Check that the path still names our ordinary, handle-identified file."""
+    try:
+        current = path.lstat()
+    except FileNotFoundError:
+        return False
+    return (stat.S_ISREG(current.st_mode) and identity.st_ino != 0 and
+            not (getattr(current, "st_file_attributes", 0) &
+                 getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)) and
+            (current.st_dev, current.st_ino) == (identity.st_dev, identity.st_ino))
+
+
+def write_inventory(path, payload):
+    """Create exclusively; clean up a failed write only while we own the path."""
+    # Exclusive creation is outside cleanup: a collision is never our file.
+    stream = path.open("x", encoding="utf-8")
+    identity = None
+    try:
+        try:
+            identity = os.fstat(stream.fileno())
+            stream.write(payload)
+            stream.flush()
+        finally:
+            original_error = sys.exc_info()[1]
+            try:
+                stream.close()
+            except BaseException:
+                # A close failure must not replace an earlier write/flush error.
+                # Retry closure for streams which failed before releasing the fd.
+                try:
+                    stream.close()
+                except BaseException:
+                    pass
+                if original_error is None:
+                    raise
+    except BaseException:
+        try:
+            if identity is not None and owns_output(path, identity):
+                path.unlink()
+        except OSError:
+            pass  # Preserve the write/flush/close error if cleanup also fails.
+        raise
+
+
 def main():
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
@@ -397,8 +454,7 @@ def main():
         report, code = inspect(args.pptx, include_text=args.include_text)
         payload = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
         if args.out:
-            with args.out.open("x", encoding="utf-8") as stream:
-                stream.write(payload)
+            write_inventory(args.out, payload)
         else:
             if hasattr(sys.stdout, "reconfigure"):
                 sys.stdout.reconfigure(encoding="utf-8")

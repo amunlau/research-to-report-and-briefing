@@ -19,7 +19,8 @@ from urllib.parse import quote
 
 SCHEMA = 'research-briefing/2'
 LEGACY = 'research-briefing/1'
-VERSION = '3.3.0'
+VERSION = '4.0.0'
+MAX_JSON_DEPTH = 128
 SEMVER = (r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
           r'(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
           r'(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?'
@@ -41,11 +42,12 @@ class MemoryError(ValueError):
 
 def emit(value):
     if hasattr(sys.stdout, 'reconfigure'):
-        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
     print(json.dumps(value, ensure_ascii=False, indent=2))
 
 
 def encoded(value):
+    validate_json_tree(value)
     return json.dumps(value, ensure_ascii=False, indent=2) + '\n'
 
 
@@ -126,6 +128,24 @@ def unique_json_object(pairs):
     return result
 
 
+def validate_json_tree(value):
+    """Bound nesting before recursive consumers and reject invalid Unicode."""
+    pending = [(value, 0)]
+    while pending:
+        current, depth = pending.pop()
+        if isinstance(current, str):
+            require(not any(0xD800 <= ord(char) <= 0xDFFF for char in current),
+                    'JSON contains an unpaired Unicode surrogate.')
+        elif isinstance(current, (dict, list)):
+            depth += 1
+            require(depth <= MAX_JSON_DEPTH, 'JSON container nesting exceeds 128 levels.')
+            if isinstance(current, dict):
+                pending.extend((key, depth) for key in current)
+                pending.extend((item, depth) for item in current.values())
+            else:
+                pending.extend((item, depth) for item in current)
+
+
 def load_json(path, with_identity=False):
     try:
         before = path.stat() if with_identity else None
@@ -133,7 +153,8 @@ def load_json(path, with_identity=False):
         after = path.stat() if with_identity else None
         data = json.loads(payload.decode('utf-8-sig'), object_pairs_hook=unique_json_object,
                           parse_constant=reject_json_constant, parse_float=finite_json_float)
-    except (OSError, ValueError) as exc:
+        validate_json_tree(data)
+    except (OSError, ValueError, RecursionError) as exc:
         raise MemoryError('Cannot read JSON ' + str(path) + ': ' + str(exc)) from exc
     if with_identity:
         require((before.st_size, before.st_mtime_ns, before.st_dev, before.st_ino)
@@ -493,6 +514,17 @@ def verify(args):
         require(type(entry['bytes']) is int and entry['bytes'] >= 0 and isinstance(entry['sha256'], str)
                 and re.fullmatch(r'[0-9a-f]{64}', entry['sha256']), 'Invalid config identity.')
         config_status = 'missing' if not path.is_file() else 'match' if fingerprint(path) == {'bytes': entry['bytes'], 'sha256': entry['sha256']} else 'changed'
+        if config_status == 'match' and data['schema_version'] == SCHEMA:
+            # The frozen delivery list must agree with the exact configuration
+            # it claims to bind. Do not compare it against a later configuration.
+            config, actual_identity = load_json(path, with_identity=True)
+            if actual_identity != {'bytes': entry['bytes'], 'sha256': entry['sha256']}:
+                config_status = 'changed'
+            else:
+                require(isinstance(config, dict) and isinstance(config.get('delivery'), dict),
+                        'Snapshot does not reference a valid bound configuration.')
+                require(data['expected_artifacts'] == config['delivery'].get('expected_artifacts'),
+                        'Snapshot expected artifacts differ from the bound configuration.')
     matches = not findings and config_status in ('not-bound', 'match')
     emit({'status': 'match' if matches else 'different', 'checked': len(entries),
           'config_status': config_status, 'findings': findings})
@@ -532,7 +564,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         return args.run(args)
-    except (MemoryError, OSError, KeyError, TypeError, AttributeError) as exc:
+    except (MemoryError, OSError, UnicodeError, RecursionError, KeyError, TypeError, AttributeError) as exc:
         emit({'status': 'error', 'message': str(exc)})
         return 2
 

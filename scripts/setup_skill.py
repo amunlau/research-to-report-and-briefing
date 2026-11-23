@@ -16,6 +16,7 @@ import posixpath
 import re
 import shutil
 import stat
+import string
 import sys
 import uuid
 from urllib.parse import unquote, urlsplit
@@ -24,6 +25,7 @@ NAME = "research-to-report-and-briefing"
 SOURCE = Path(__file__).resolve().parent.parent
 HOST_DIRS = {"codex": ".agents", "claude": ".claude"}
 IGNORED = {"__pycache__", ".git", ".DS_Store"}
+MAX_JSON_DEPTH = 128
 REQUIRED_RESOURCES = (
     "scripts/project_memory.py", "scripts/audit_content.py", "scripts/inspect_pptx.py",
     "assets/project.schema.json", "assets/memory-templates.json",
@@ -81,6 +83,38 @@ def inventory(root):
     return {"files": files, "directories": sorted(directories)}
 
 
+def markdown_destination(text, start):
+    """Scan one destination, unescaping punctuation without counting escaped parens."""
+    angle = text[start:start + 1] == "<"
+    index = start + int(angle)
+    depth, characters = 0, []
+    while index < len(text):
+        char = text[index]
+        if char == "\\" and index + 1 < len(text) and text[index + 1] in string.punctuation:
+            characters.append(text[index + 1])
+            index += 2
+            continue
+        if angle:
+            if char == ">":
+                return "".join(characters), index + 1
+            if char in "\r\n<":
+                return None
+        else:
+            if char.isspace() or char == ")" and depth == 0:
+                break
+            if char == "<" or ord(char) < 32:
+                return None
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+        characters.append(char)
+        index += 1
+    if angle or depth or not characters:
+        return None
+    return "".join(characters), index
+
+
 def markdown_destinations(text):
     """Read common inline links/reference definitions, excluding code examples."""
     prose, fence = [], None
@@ -96,11 +130,17 @@ def markdown_destinations(text):
         if fence is None and not line.startswith(("    ", "\t")):
             prose.append(line)
     text = re.sub(r"(`+).*?\1", "", "\n".join(prose), flags=re.S)
-    patterns = (r"!?\[[^\]\n]*\]\(\s*(?:<([^>\n]+)>|([^\s)]+))",
-                r"(?m)^ {0,3}\[[^\]\n]+\]:\s*(?:<([^>\n]+)>|(\S+))")
-    for pattern in patterns:
+    patterns = (r"!?\[[^\]\n]*\]\(\s*", r"(?m)^ {0,3}\[[^\]\n]+\]:\s*")
+    # An inline destination must be followed by its closing delimiter, possibly
+    # with a title. Do not return a truncated path from an unfinished link.
+    inline_end = re.compile(r'''(?:\s*\)|\s+(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\((?:\\.|[^()\\])*\))\s*\))''')
+    for inline, pattern in zip((True, False), patterns):
         for match in re.finditer(pattern, text):
-            yield match[1] or match[2]
+            destination = markdown_destination(text, match.end())
+            if destination is not None:
+                value, end = destination
+                if not inline or inline_end.match(text, end):
+                    yield value
 
 
 def resource_problems(manifest):
@@ -125,9 +165,37 @@ def resource_problems(manifest):
     return problems
 
 
+def validate_json_string(value):
+    if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
+        raise ValueError('JSON strings must not contain lone surrogate code points.')
+
+
+def validate_json_input(value):
+    """Count containers only (root = 1); never recurse through untrusted JSON."""
+    pending = [(value, 0)]
+    while pending:
+        item, depth = pending.pop()
+        if isinstance(item, (dict, list)):
+            depth += 1
+            if depth > MAX_JSON_DEPTH:
+                raise ValueError('JSON container depth exceeds ' + str(MAX_JSON_DEPTH) + '.')
+            if isinstance(item, dict):
+                for key in item:
+                    validate_json_string(key)
+                children = item.values()
+            else:
+                children = item
+            pending.extend((child, depth) for child in children)
+        elif isinstance(item, str):
+            validate_json_string(item)
+
+
 def unique_json_object(pairs):
     result = {}
     for key, value in pairs:
+        # Validate before constructing duplicate-key diagnostics, which may be
+        # printed to a strict UTF-8 stream even when main is called in-process.
+        validate_json_string(key)
         if key in result:
             raise ValueError('Duplicate JSON key: ' + key)
         result[key] = value
@@ -166,13 +234,14 @@ def package_check():
             path = SOURCE / relative
             if path.suffix == ".json":
                 try:
-                    json.loads(path.read_text(encoding="utf-8-sig"), object_pairs_hook=unique_json_object,
-                               parse_constant=reject_json_constant, parse_float=finite_json_float)
-                except ValueError as error:
+                    value = json.loads(path.read_text(encoding="utf-8-sig"), object_pairs_hook=unique_json_object,
+                                       parse_constant=reject_json_constant, parse_float=finite_json_float)
+                    validate_json_input(value)
+                except (ValueError, RecursionError) as error:
                     raise ValueError("Invalid JSON in " + relative + ": " + str(error)) from error
             elif path.suffix == ".py":
                 compile(path.read_bytes(), str(path), "exec")
-    except (OSError, ValueError, SyntaxError, UnicodeError) as error:
+    except (OSError, ValueError, SyntaxError, UnicodeError, RecursionError) as error:
         problems.append(str(error))
     if sys.version_info < (3, 9):
         problems.append("Packaged helpers require Python 3.9 or newer.")
@@ -332,14 +401,16 @@ def main(argv=None):
         return 0
     try:
         result, code = check(args) if args.command == "check" else install(args)
-    except (OSError, ValueError, shutil.Error) as error:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    except (OSError, ValueError, shutil.Error, RecursionError) as error:
         result, code = {"command": args.command, "status": "error", "message": str(error)}, 2
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+        # Error messages can themselves contain undecodable/surrogate text.
+        print(json.dumps(result, ensure_ascii=True, indent=2))
     return code
 
 
 if __name__ == "__main__":
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8")
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
     raise SystemExit(main())
